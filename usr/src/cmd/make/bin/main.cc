@@ -52,13 +52,22 @@
 #include <sys/errno.h>		/* ENOENT */
 #include <sys/stat.h>		/* fstat() */
 #include <fcntl.h>		/* open() */
+#include <ctype.h>
 
+#if defined(sun) || defined(__sun)
 #	include <sys/systeminfo.h>	/* sysinfo() */
+#else
+#include <sys/sysinfo.h>
+#endif
 
 #include <sys/types.h>		/* stat() */
 #include <sys/wait.h>		/* wait() */
 #include <unistd.h>		/* execv(), unlink(), access() */
 #include <vroot/report.h>	/* report_dependency(), get_report_file() */
+
+#include <libintl.h> // gettext()
+
+#include <comp/progname.h>
 
 // From read2.cc
 extern	Name		normalize_name(wchar_t *name_string, int length);
@@ -202,7 +211,11 @@ main(int argc, char *argv[])
 
 	struct stat		out_stat, err_stat;
 	hostid = gethostid();
+#if defined(sun) || defined(__sun)
 	bsd_signals();
+#else
+// XXX necessary on linux?
+#endif
 
 	(void) setlocale(LC_ALL, "");
 
@@ -501,7 +514,11 @@ main(int argc, char *argv[])
 /*
  *	Enable interrupt handler for alarms
  */
+#if defined(sun) || defined(__sun)
         (void) bsd_signal(SIGALRM, (SIG_PF)doalarm);
+#else
+        (void) bsd_signal(SIGALRM, doalarm);
+#endif
 
 /*
  *	Check if make should report
@@ -1633,7 +1650,13 @@ make_install_prefix(void)
 	char origin[PATH_MAX];
 	char *dir;
 
-	if ((ret = readlink("/proc/self/path/a.out", origin,
+	if ((ret = readlink(
+#if defined(sun) || defined(__sun)
+            "/proc/self/path/a.out",
+#else
+            "/proc/self/exe",
+#endif
+            origin,
 	    PATH_MAX - 1)) < 0)
 		fatal("failed to read origin from /proc\n");
 

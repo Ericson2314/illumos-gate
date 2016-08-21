@@ -48,6 +48,10 @@
 #include <stdarg.h>		/* va_list, va_start(), va_end() */
 #include <vroot/report.h>	/* SUNPRO_DEPENDENCIES */
 #include <libintl.h>
+#include <time.h>
+#include <unistd.h>
+
+#include <comp/progname.h>
 
 extern void job_adjust_fini();
 
