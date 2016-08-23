@@ -42,6 +42,7 @@
 #include <libintl.h>
 
 #include <comp/progname.h>
+#include <comp/wcsdup.h>
 
 /*
  * Defined macros
