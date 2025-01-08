@@ -74,7 +74,10 @@
 #define	SETVAR(name, value, append) \
 				setvar_daemon(name, value, append, no_daemon, \
 				true, debug_level)
-#define	MAX(a, b)		(((a) > (b))?(a):(b))
+#ifndef MAX
+/* defined in libbsd, used for the linux build */
+#define	MAX(Aa, b)		(((a) > (b))?(a):(b))
+#endif
 /*
  * New feature added to SUN5_0 make,  invoke the vanilla svr4 make when
  * the USE_SVR4_MAKE environment variable is set.

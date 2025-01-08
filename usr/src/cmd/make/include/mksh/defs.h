@@ -39,6 +39,7 @@
 #include <wchar.h>
 
 #include <comp/timestruc_t.h>
+#include <comp/macros.h>
 
 /*
  * A type and some utilities for boolean values
