@@ -23,7 +23,6 @@
  * Use is subject to license terms.
  */
 
-#if defined(__sun)
 
 #include <signal.h>
 
@@ -72,5 +71,3 @@ bsd_signals (void)
 
   return;
 }
-
-#endif

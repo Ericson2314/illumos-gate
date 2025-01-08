@@ -2,7 +2,6 @@
 #ifndef SOMAKE_CONFIG_H
 #define SOMAKE_CONFIG_H
 
-#cmakedefine HAVE_WCSDUP 1
 #cmakedefine HAVE_CLOSEFROM 1
 
 #endif

@@ -4,7 +4,6 @@ cmake_minimum_required(VERSION 2.8)
 project(somake C CXX)
 
 include(CheckFunctionExists)
-check_function_exists(wcsdup HAVE_WCSDUP)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
   find_package(PkgConfig)
@@ -47,7 +46,7 @@ add_executable(${PROJECT_NAME}
   bin/pmake.cc    bin/read.cc    bin/read2.cc        bin/rep.cc
   bin/state.cc
   lib/bsd/bsd.cc
-  comp/progname.c comp/wcsdup.c
+  comp/progname.c
 )
 
 set_property(TARGET ${PROJECT_NAME} mksh vroot PROPERTY INCLUDE_DIRECTORIES

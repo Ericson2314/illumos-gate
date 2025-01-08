@@ -274,7 +274,6 @@ other modern [POSIXy][posix] operating systems.
 So far, the port was successfully tested under:
 
 - Fedora 23/x86-64
-- Solaris 10/SPARC
 
 
 ## Naming
@@ -314,15 +313,6 @@ differently, e.g.:
     -- Install configuration: "Release"
     -- Installing: dest/usr/bin/somake
     [..]
-
-### Tweaks
-
-If you are compiling on a legacy platform with ancient libraries
-you may need to tweak the cmake call a little bit. For example,
-to compile with GCC on a Solaris 10 system:
-
-    $ CC=gcc CXX=g++ CFLAGS='-m64' CXXFLAGS='-m64' \
-        cmake -DCMAKE_BUILD_TYPE=Release ../somake
 
 ### Manual Installation
 

@@ -41,8 +41,6 @@
 
 #include <libintl.h>
 
-#include <comp/wcsdup.h>
-
 /*
  * File table of contents
  */

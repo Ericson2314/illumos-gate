@@ -36,8 +36,6 @@
 #include <mksh/misc.h>		/* retmem() */
 #include <vroot/report.h>	/* NSE_DEPINFO */
 
-#include <comp/wcsdup.h>
-
 /*
  * Static variables
  */
