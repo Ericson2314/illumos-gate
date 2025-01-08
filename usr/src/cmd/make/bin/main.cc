@@ -514,11 +514,7 @@ main(int argc, char *argv[])
 /*
  *	Enable interrupt handler for alarms
  */
-#ifdef __sun
         (void) bsd_signal(SIGALRM, (SIG_PF)doalarm);
-#else
-        (void) bsd_signal(SIGALRM, doalarm);
-#endif
 
 /*
  *	Check if make should report

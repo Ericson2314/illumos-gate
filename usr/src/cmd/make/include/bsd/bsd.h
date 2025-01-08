@@ -32,19 +32,9 @@
 
 #include <signal.h>
 
-#ifdef __sun
-
-#ifndef __cplusplus
 typedef void (*SIG_PF) (int);
-#endif
 
-#ifdef __cplusplus
-extern "C" SIG_PF bsd_signal(int a, SIG_PF b);
-#else
-extern void (*bsd_signal(int, void (*) (int))) (int);
-#endif
+extern SIG_PF bsd_signal(int a, SIG_PF b);
 extern void bsd_signals(void);
-
-#endif
 
 #endif

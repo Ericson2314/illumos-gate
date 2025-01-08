@@ -48,7 +48,7 @@ bsd_signal (int Signal, SIG_PF Handler)
   struct sigaction         old_action;
 
   new_action.sa_flags = SA_SIGINFO;
-  new_action.sa_handler = (void (*) ()) Handler;
+  new_action.sa_handler = Handler;
   (void) sigemptyset (&new_action.sa_mask);
   (void) sigaddset (&new_action.sa_mask, Signal);
 
