@@ -15,13 +15,15 @@ else()
   check_function_exists(closefrom HAVE_CLOSEFROM)
 endif()
 
-configure_file(config.h.in config.h)
-
 if(CMAKE_SYSTEM_NAME STREQUAL "SunOS")
   find_library(NSL_LIB NAMES nsl)
   # prefer the OpenCSW libintl over the one from /usr/lib
   find_library(INTL_LIB NAMES intl HINTS /opt/csw/lib)
+else()
+  pkg_search_module(TIRPC libtirpc)
 endif()
+
+configure_file(config.h.in config.h)
 
 add_library(mksh STATIC
   lib/mksh/dosys.cc lib/mksh/globals.cc lib/mksh/i18n.cc lib/mksh/macro.cc
@@ -54,10 +56,17 @@ set_property(TARGET ${PROJECT_NAME} mksh vroot PROPERTY INCLUDE_DIRECTORIES
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_CURRENT_BINARY_DIR}
   ${BSD_INCLUDE_DIRS}
+  ${TIRPC_INCLUDE_DIRS}
 )
 
 target_link_libraries(${PROJECT_NAME}
-  mksh vroot pthread ${BSD_LIBRARIES} ${NSL_LIB} ${INTL_LIB}
+  mksh
+  vroot
+  pthread
+  ${BSD_LIBRARIES}
+  ${TIRPC_LIBRARIES}
+  ${NSL_LIB}
+  ${INTL_LIB}
 )
 
 # default install prefix is /usr/local
