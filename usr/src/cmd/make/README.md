@@ -18,6 +18,7 @@ command and hidden dependencies.
 
 2016, Georg Sauthofff <mail@georg.so>
 
+The port is originally from <https://github.com/gsauthof/somake/tree/illumos>
 
 ## Build Instructions
 
