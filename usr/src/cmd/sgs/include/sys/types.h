@@ -1,7 +1,9 @@
-#include <sys/stddef.h>
+#include_next <sys/types.h>
+// TODO should this be here?
+#include <stdint.h>
 
 /*
- * POSIX Extensions
+ * POSIX Extensions for Illumos
  */
 typedef unsigned char   uchar_t;
 typedef unsigned short  ushort_t;
