@@ -118,14 +118,6 @@ JAVA_ROOT=	/usr/java
 # string in the environment to override.
 BLD_JAVA_11=	$(POUND_SIGN)
 
-GNUC_ROOT=	/usr/gcc/10
-GCCLIBDIR=	$(GNUC_ROOT)/lib
-GCCLIBDIR64=	$(GNUC_ROOT)/lib/$(MACH64)
-
-NATIVE_GNUC_ROOT=	/
-NATIVE_GCCLIBDIR=	$(NATIVE_GNUC_ROOT)/lib
-NATIVE_GCCLIBDIR64=	$(NATIVE_GNUC_ROOT)/lib/$(MACH64)
-
 DOCBOOK_XSL_ROOT=	/usr/share/sgml/docbook/xsl-stylesheets
 
 RPCGEN=		$(ONBLD_TOOLS)/bin/$(MACH)/rpcgen
@@ -337,8 +329,7 @@ CCNOAUTOINLINE= \
 	-_gcc=-fno-inline-small-functions \
 	-_gcc=-fno-inline-functions-called-once \
 	-_gcc=-fno-ipa-cp \
-	-_gcc=-fno-ipa-icf \
-	-_gcc=-fno-clone-functions
+	-_gcc=-fno-ipa-icf
 
 # GCC may put functions in different named sub-sections of .text based on
 # their presumed calling frequency.  At least in the kernel, where we actually
@@ -745,8 +736,8 @@ NATIVE_MACH64=	$(MACH64)
 # environment.
 GNU_ROOT=		/usr
 
-PRIMARY_CC=	gcc10,$(GNUC_ROOT)/bin/gcc,gnu
-PRIMARY_CCC=	gcc10,$(GNUC_ROOT)/bin/g++,gnu
+PRIMARY_CC=	gcc10,/nix/store/xcn9p4xxfbvlkpah7pwchpav4ab9d135-gcc-wrapper-14-20241116/bin/gcc,gnu
+PRIMARY_CCC=	gcc10,/nix/store/xcn9p4xxfbvlkpah7pwchpav4ab9d135-gcc-wrapper-14-20241116/bin/g++,gnu
 
 CW_CC_COMPILERS=	$(PRIMARY_CC:%=--primary %) $(SHADOW_CCS:%=--shadow %)
 CW_CCC_COMPILERS=	$(PRIMARY_CCC:%=--primary %) $(SHADOW_CCCS:%=--shadow %)
@@ -756,8 +747,8 @@ CW_LINKER=		--linker $(LD)
 # Specify platform compiler versions for languages
 # that we use (currently only c and c++).
 #
-CW=			$(ONBLD_TOOLS)/bin/$(MACH)/cw
-NATIVE_CW=		$(ONBLD_TOOLS)/bin/$(MACH)/cw
+CW=			cw
+NATIVE_CW=		cw
 
 BUILD_CC=		$(CW) --tag target $(CW_LINKER) $(CW_CC_COMPILERS) --
 BUILD_CCC=		$(CW) --tag target -C $(CW_LINKER) $(CW_CCC_COMPILERS) --
