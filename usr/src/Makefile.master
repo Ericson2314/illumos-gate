@@ -122,7 +122,7 @@ GNUC_ROOT=	/usr/gcc/10
 GCCLIBDIR=	$(GNUC_ROOT)/lib
 GCCLIBDIR64=	$(GNUC_ROOT)/lib/$(MACH64)
 
-NATIVE_GNUC_ROOT=	$(GNUC_ROOT)
+NATIVE_GNUC_ROOT=	/
 NATIVE_GCCLIBDIR=	$(NATIVE_GNUC_ROOT)/lib
 NATIVE_GCCLIBDIR64=	$(NATIVE_GNUC_ROOT)/lib/$(MACH64)
 
@@ -167,7 +167,7 @@ CAT=            /usr/bin/cat
 ELFDUMP=	/usr/bin/elfdump
 M4=		/usr/bin/m4
 GM4=		/usr/bin/gm4
-STRIP=		/usr/bin/strip
+#STRIP=		/usr/bin/strip
 LEX=		$(ONBLD_TOOLS)/bin/$(MACH)/lex -Y $(ONBLD_TOOLS)/share/lib/ccs
 FLEX=		/usr/bin/flex
 BISON=		/usr/bin/bison
@@ -955,8 +955,8 @@ BOOTBANNER3=
 BOOTBANNER4=
 BOOTBANNER5=
 
-PROCESS_COMMENT=  @?${MCS} -d -a $(RELEASE_CM) -a $(DEV_CM)
-$(RELEASE_BUILD)PROCESS_COMMENT=   @?${MCS} -d -a $(RELEASE_CM)
+PROCESS_COMMENT=  :
+#$(RELEASE_BUILD)PROCESS_COMMENT=   @?${MCS} -d -a $(RELEASE_CM)
 
 STRIP_STABS=			   $(STRIP) -x $@
 $(SRCDBGBLD)STRIP_STABS=	   :
