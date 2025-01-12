@@ -149,6 +149,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <dirent.h>
+#include <stdint.h>
 
 #include <sys/param.h>
 #include <sys/stat.h>
