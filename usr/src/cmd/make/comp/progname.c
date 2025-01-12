@@ -4,5 +4,5 @@
 const char *getprogname()
 {
   // XXX
-  return "somake";
+  return "make";
 }

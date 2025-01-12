@@ -1,7 +1,7 @@
 # 2016, Georg Sauthoff <mail@georg.so>
 
 cmake_minimum_required(VERSION 2.8)
-project(somake C CXX)
+project(make C CXX)
 
 include(CheckFunctionExists)
 

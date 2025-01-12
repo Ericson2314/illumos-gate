@@ -1,4 +1,4 @@
-`somake` is a portable version of illumos make. illumos make is
+`make` is a portable version of illumos make. illumos make is
 derived from Sun's dmake (distributed make) which in turn is
 compatible with the bonus features of Sun make. Notable Sun make
 features are:

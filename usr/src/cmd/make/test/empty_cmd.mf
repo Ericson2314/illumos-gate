@@ -32,15 +32,15 @@ hello:
 #
 # 1) comment out the line after (A)
 #
-#     $ somake -f empty_cmd.mf clean
+#     $ make -f empty_cmd.mf clean
 #     rm foo.x foo.y
 #     $ rm .make.state
-#     $ somake -f empty_cmd.mf      
+#     $ make -f empty_cmd.mf      
 #     touch foo.x
 #     cat foo.x foo.x > foo.y
 #     echo hello
 #     hello
-#     $ somake -f empty_cmd.mf 
+#     $ make -f empty_cmd.mf 
 #     echo hello
 #     hello
 #
@@ -50,30 +50,30 @@ hello:
 #
 # 2) comment in (A) and comment out (B)
 #
-#     $ somake -f empty_cmd.mf clean
+#     $ make -f empty_cmd.mf clean
 #     rm foo.x foo.y
 #     $ rm .make.state
-#     $ somake -f empty_cmd.mf foo.y
+#     $ make -f empty_cmd.mf foo.y
 #     touch foo.x
 #     cat foo.x foo.x > foo.y
-#     $ somake -f empty_cmd.mf foo.y
+#     $ make -f empty_cmd.mf foo.y
 #     `foo.y' is up to date.
 #
 # -> again, as expected the foo.y action is only executed once.
 #
 # 3) comment in (A) and (B)
 #
-#     $ somake -f empty_cmd.mf clean
+#     $ make -f empty_cmd.mf clean
 #     touch foo.x
 #     cat foo.x foo.x > foo.y
 #     rm foo.x foo.y
 #     $ rm .make.state
-#     $ somake -f empty_cmd.mf      
+#     $ make -f empty_cmd.mf      
 #     touch foo.x
 #     cat foo.x foo.x > foo.y
 #     echo hello
 #     hello
-#     $ somake -f empty_cmd.mf 
+#     $ make -f empty_cmd.mf 
 #     touch foo.x
 #     cat foo.x foo.x > foo.y
 #     echo hello

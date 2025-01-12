@@ -39,56 +39,56 @@ Or to use Ninja instead of GNU Make:
 ## Examples
 
 The following assumes that the repository was cloned to the
-directory `somake` and that `somake-build` is the build
+directory `make` and that `make-build` is the build
 directory.
 
 Copy the example files and the basic rule file for testing:
 
-    $ cd ../somake-build
-    $ cp -r ../somake/example/ .
-    $ cp ../somake/bin/make.rules.file example/make.rules
+    $ cd ../make-build
+    $ cp -r ../make/example/ .
+    $ cp ../make/bin/make.rules.file example/make.rules
     $ cd example
-    $ ln -s ../somake
+    $ ln -s ../make
 
 Compile the hello world program:
 
-    $ ./somake -m serial helloworld
+    $ ./make -m serial helloworld
     cc    -o helloworld helloworld.c
 
 Verify that make detects that no rebuild is necessary:
 
-    $ ./somake -m serial helloworld
+    $ ./make -m serial helloworld
     `helloworld' is up to date.
 
 Test command dependencies:
 
-    $ ./somake -m serial helloworld CC=gcc
+    $ ./make -m serial helloworld CC=gcc
     gcc    -o helloworld helloworld.c
 
 Also works for other variables:
 
-    $ ./somake -m serial helloworld CC=gcc CFLAGS=-Wall
+    $ ./make -m serial helloworld CC=gcc CFLAGS=-Wall
     gcc -Wall   -o helloworld helloworld.c
 
 Test hidden dependency checks:
 
-    $ ./somake -m serial hello
+    $ ./make -m serial hello
     cc   -c  hello.c
     cc   -c  world.c
     cc  hello.o world.o -o hello
-    $ ./somake -m serial hello
+    $ ./make -m serial hello
     `hello' is up to date.
     $ touch world.h
-    $ ./somake -m serial hello
+    $ ./make -m serial hello
     cc   -c  hello.c
     cc   -c  world.c
     cc  hello.o world.o -o hello
-    $ ./somake -m serial hello
+    $ ./make -m serial hello
     `hello' is up to date.
     $ touch world.h
-    $ ./somake -m serial world.o
+    $ ./make -m serial world.o
     cc   -c  world.c
-    $ ./somake -m serial hello
+    $ ./make -m serial hello
     cc   -c  hello.c
     cc  hello.o world.o -o hello
 
@@ -97,7 +97,7 @@ Note that command and hidden dependencies are enabled by declaring the
 
 Test target groups:
 
-    $ ./somake -m serial main_foo
+    $ ./make -m serial main_foo
     ./gen_foo.sh
     cc   -c  main_foo.c
     cc   -c  foo.c
@@ -110,9 +110,9 @@ Now remove the `+` in the generating rule
 
 and run again:
 
-    $ ./somake -m serial clean
+    $ ./make -m serial clean
     $ rm .make.state
-    $ ./somake -m serial main_foo
+    $ ./make -m serial main_foo
     ./gen_foo.sh
     cc   -c  main_foo.c
     ./gen_foo.sh
@@ -162,7 +162,7 @@ Note that GNU make supports target groups with pattern rules, though:
 With Sun make the same result is yielded iff a `+` is inserted between both
 pattern targets:
 
-    $ ./somake -m serial both
+    $ ./make -m serial both
     echo x > foo.bar
     sed 's/x/y/' foo.bar > foo.one
     sed 's/x/z/' foo.bar > foo.two
@@ -170,16 +170,16 @@ pattern targets:
 The example makefile also contains an example for Sun make style conditional
 macro assignments (with `:=`):
 
-    $ ./somake -m serial warn-helloworld
+    $ ./make -m serial warn-helloworld
     cc -Wall   -o helloworld helloworld.c
 
 The combination with command dependencies makes this feature even more useful:
 
-    $ ./somake -m serial warn-helloworld
+    $ ./make -m serial warn-helloworld
     cc -Wall   -o helloworld helloworld.c
-    $ ./somake -m serial helloworld
+    $ ./make -m serial helloworld
     cc    -o helloworld helloworld.c
-    $ ./somake -m serial warn-helloworld
+    $ ./make -m serial warn-helloworld
     cc -Wall   -o helloworld helloworld.c
 
 In contrast, GNU make doesn't rebuild `helloworld` because it doesn't
@@ -285,8 +285,6 @@ bundled with OpenOffice][oodmake], a dmake that OpenOffice's
 dmake is based on, an [imake][imake] to build old X versions and
 the [Schily smake][smake].
 
-Thus, to not add to the confusion I chose `somake`.
-
 
 ## Installation
 
@@ -295,7 +293,7 @@ The build file also contains an install target, e.g.:
     $ DESTDIR=dest ninja-build install
     [1/1] Install the project...
     -- Install configuration: "Release"
-    -- Installing: dest/usr/local/bin/somake
+    -- Installing: dest/usr/local/bin/make
     [..]
 
 If you use the standard makefile generator with cmake, just
@@ -306,31 +304,31 @@ preparing a binary package and just to have a preview.
 To change the default install prefix, you have to call `cmake`
 differently, e.g.:
 
-    $ cmake ../somake -DCMAKE_INSTALL_PREFIX=/usr \
+    $ cmake ../make -DCMAKE_INSTALL_PREFIX=/usr \
         -DCMAKE_BUILD_TYPE=Release -G Ninja
     $ DESTDIR=dest ninja-build install
     [..]
     -- Install configuration: "Release"
-    -- Installing: dest/usr/bin/somake
+    -- Installing: dest/usr/bin/make
     [..]
 
 ### Manual Installation
 
 In case you prefer a manual installation, basically it is just:
 
-- copy the created `somake` binary to a `bin/` directory under some prefix
+- copy the created `make` binary to a `bin/` directory under some prefix
 - copy the man page into the related manpath
 - copy the rule files that contain the built-in rules and are located
   in the `bin/` subdirectory of this repository to one of the directories
-  searched by `somake` (and also remove the `.file` suffix)
+  searched by `make` (and also remove the `.file` suffix)
 
 ### Rule Search Path
 
-Using `make.rules` as an example, `somake` tries to open it in
+Using `make.rules` as an example, `make` tries to open it in
 the following order:
 
 1. `make.rules`
-2. `$ORIGIN/../share/somake/make.rules`   # added by this port
+2. `$ORIGIN/../share/make/make.rules`   # added by this port
 3. `$ORIGIN/../share/lib/make/make.rules`
 4. `$ORIGIN/../../share/make.rules`
 5. `/usr/share/lib/make/make.rules`
@@ -343,29 +341,29 @@ for CPack, the CMake companion tool for creating binary packages.
 
 For example, to create `.rpm` and `.deb` packages:
 
-    $ cmake ../somake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr \
+    $ cmake ../make -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr \
         -DCPACK_GENERATOR='RPM;DEB' -GNinja
     $ ninja-build package
-    $  ls somake-*
-    somake-0.6.0-Linux.deb  somake-0.6.0-Linux.rpm
+    $  ls make-*
+    make-0.6.0-Linux.deb  make-0.6.0-Linux.rpm
 
 As always, the `-GNinja` generator option can be dropped -
 `ninja-build` has to be replaced with `make` then.
 
 The content of the archives can be verified like this:
 
-    $ dpkg --contents somake-0.6.0-Linux.deb
-    $ dpkg --info somake-0.6.0-Linux.deb
+    $ dpkg --contents make-0.6.0-Linux.deb
+    $ dpkg --info make-0.6.0-Linux.deb
 
 Or:
 
-    $ rpm2cpio somake-0.6.0-Linux.rpm | cpio --list -v
-    $ rpm -qip somake-0.6.0-Linux.rpm
+    $ rpm2cpio make-0.6.0-Linux.rpm | cpio --list -v
+    $ rpm -qip make-0.6.0-Linux.rpm
 
 ### Open Build Service
 
 There is also an [Open Build Service Repository][obs] that provides
-somake binary packages for several distributions.
+make binary packages for several distributions.
 
 ## License
 
