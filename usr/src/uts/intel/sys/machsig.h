@@ -47,7 +47,7 @@ extern "C" {
 
 #if !defined(_POSIX_C_SOURCE) || defined(_XPG4_2) || defined(__EXTENSIONS__)
 
-#if !defined(_XPG4_2) || defined(__EXTENSIONS__)
+#if defined(_KERNEL)
 #include <vm/faultcode.h>
 #endif
 
