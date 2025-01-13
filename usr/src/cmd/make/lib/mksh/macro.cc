@@ -904,7 +904,7 @@ init_arch_macros(void)
 	FILE		*pipe;
 	Name		value;
 	int		set_host, set_target;
-	const char	*mach_command = "/bin/mach";
+	const char	*mach_command = "mach";
 
 	set_host = (get_prop(host_arch->prop, macro_prop) == NULL);
 	set_target = (get_prop(target_arch->prop, macro_prop) == NULL);
@@ -959,7 +959,7 @@ init_mach_macros(void)
 	FILE		*pipe;
 	Name		value;
 	int		set_host, set_target;
-	const char	*arch_command = "/bin/arch";
+	const char	*arch_command = "arch";
 
 	set_host = (get_prop(host_mach->prop, macro_prop) == NULL);
 	set_target = (get_prop(target_mach->prop, macro_prop) == NULL);
