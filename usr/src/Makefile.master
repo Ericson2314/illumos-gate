@@ -736,8 +736,8 @@ NATIVE_MACH64=	$(MACH64)
 # environment.
 GNU_ROOT=		/usr
 
-PRIMARY_CC_PATH:sh = command -v gcc
-PRIMARY_CCC_PATH:sh = command -v g++
+PRIMARY_CC_PATH:sh = command -v gcc || :
+PRIMARY_CCC_PATH:sh = command -v g++ || :
 PRIMARY_CC=	gcc10,$(PRIMARY_CC_PATH),gnu
 PRIMARY_CCC=	gcc10,$(PRIMARY_CCC_PATH),gnu
 
