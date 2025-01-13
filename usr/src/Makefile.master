@@ -120,7 +120,7 @@ BLD_JAVA_11=	$(POUND_SIGN)
 
 DOCBOOK_XSL_ROOT=	/usr/share/sgml/docbook/xsl-stylesheets
 
-RPCGEN=		$(ONBLD_TOOLS)/bin/$(MACH)/rpcgen
+RPCGEN=		rpcgen
 ELFEXTRACT=	$(ONBLD_TOOLS)/bin/$(MACH)/elfextract
 MBH_PATCH=	$(ONBLD_TOOLS)/bin/$(MACH)/mbh_patch
 BTXLD=		$(ONBLD_TOOLS)/bin/$(MACH)/btxld
