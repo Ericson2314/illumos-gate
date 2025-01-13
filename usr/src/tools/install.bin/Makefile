@@ -25,16 +25,16 @@
 #
 
 PROG=	install.bin
-OBJS=	$(PROG).o stdusers.o
-SRCS=	$(PROG).c ../protocmp/stdusers.c
+OBJS=	$(PROG).o stdusers.o mkdirp.o
+SRCS=	$(PROG).c ../protocmp/stdusers.c $(SRC)/lib/libgen/common/mkdirp.c
 
 include ../Makefile.tools
 
 CFLAGS += $(CCVERBOSE)
 CERRWARN += -_gcc=-Wno-type-limits
 CPPFLAGS += -I../protocmp
-LDLIBS += -lgen
-NATIVE_LIBS += libgen.so
+#LDLIBS += -lgen
+#NATIVE_LIBS += libgen.so
 CLEANFILES += $(OBJS)
 
 # Assume we don't have the install.bin available yet
