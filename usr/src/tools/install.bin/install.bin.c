@@ -28,7 +28,11 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#ifdef __sun__
 #include <strings.h>
+#else
+#include <string.h>
+#endif
 #include <sys/param.h>
 #include <fcntl.h>
 #include <sys/errno.h>
@@ -39,6 +43,10 @@
 #include <errno.h>
 #include <libgen.h>
 #include "stdusers.h"
+
+#ifndef __sun__
+#include "mkdirp.h"
+#endif
 
 
 #define	FILE_BUFF	40960

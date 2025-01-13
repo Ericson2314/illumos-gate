@@ -62,4 +62,8 @@ clean:
 	$(COMPILE.c) -o $@ $<
 	$(POST_PROCESS_O)
 
+%.o: $(SRC)/lib/libgen/common/%.c
+	$(COMPILE.c) -o $@ $<
+	$(POST_PROCESS_O)
+
 include ../Makefile.targ
