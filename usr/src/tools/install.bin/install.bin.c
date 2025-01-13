@@ -81,7 +81,9 @@ file_copy(char *src_file, char *dest_file)
 	}
 
 	while ((count = read(src_fd, file_buff, FILE_BUFF)) > 0) {
-		(void) write(dest_fd, file_buff, count);
+		if (write(dest_fd, file_buff, count) == -1) {
+			exit(1);
+		};
 	}
 
 	if (count == -1) {
