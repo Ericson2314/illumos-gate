@@ -37,7 +37,7 @@
 #
 # Makefile.master, global definitions for system source
 #
-ROOT=		/proto
+ROOT=		/
 
 #
 # Adjunct root, containing an additional proto area to be searched for headers
