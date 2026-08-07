@@ -158,14 +158,14 @@ ROOTUSRSBINPROG32=	$(PROG:%=$(ROOTUSRSBIN32)/%)
 ROOTUSRSBINPROG64=	$(PROG:%=$(ROOTUSRSBIN64)/%)
 ROOTLIBSVCBINPROG=	$(PROG:%=$(ROOTLIBSVCBIN)/%)
 
-# Note that commands in usr/src/cmd/sgs have separate targets for this
-INS.ccsbinlink= \
-	$(RM) $(ROOTCCSBINPROG); \
-	$(SYMLINK) ../../bin/$(PROG) $(ROOTCCSBINPROG)
-
-INS.ccsbinlink64= \
-	$(RM) $(ROOTCCSBINPROG64); \
-	$(SYMLINK) ../../../bin/$(MACH64)/$(PROG) $(ROOTCCSBINPROG64)
+# Note that commands in usr/src/cmd/sgs have separate targets for this.
+#
+# The /usr/ccs/bin compatibility symlinks cannot be installed when each
+# component is built into its own prefix, as it is under Nix: the link target
+# lives in a different prefix, and $(ROOT) is empty, so the rule would try to
+# write to the real /usr/ccs/bin. Reduce both to no-ops.
+INS.ccsbinlink=
+INS.ccsbinlink64=
 
 ROOTETCDEFAULT=	$(ROOTETC)/default
 ROOTETCDEFAULTFILES=	$(DEFAULTFILES:%.dfl=$(ROOTETCDEFAULT)/%)
