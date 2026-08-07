@@ -36,25 +36,24 @@ else
 fi
 trap "rm -f $TDIR/$$symdef $TDIR/$$symref $TDIR/$$tmp; exit"  1 2 13 15
 PFX=
-WHERE=/usr/bin
 
 USAGE="Usage: ${PFX}lorder file ..."
 for i in "$@"
 do
 	case "$i" in
-	-*)	echo "$USAGE";
+	-*)	echo "$USAGE" >&2;
 		exit 2;;
 	esac
 
 	if [ ! -r "$i" ]
 	then
-		echo "${PFX}lorder: $i: cannot open"
+		echo "${PFX}lorder: $i: cannot open" >&2
 		exit 2;
 	fi
 done
 
 case $# in
-0)	echo "$USAGE"
+0)	echo "$USAGE" >&2
 	exit 2;;
 1)	case $1 in
 	*.o)	set $1 $1
@@ -85,7 +84,7 @@ esac
 #	symbol referenced (symref) file.
 #
 #
-${WHERE}/${PFX}nm -p $* 2>$TDIR/$$tmp | sed -e '/^[ 	]*$/d' -e '
+${NM:-${PFX}nm} -p $* 2>$TDIR/$$tmp | sed -e '/^[ 	]*$/d' -e '
 	/^[0-9]* R $/d
 	/ [[:lower:]FLS] /d
 	/[^]]:$/{
