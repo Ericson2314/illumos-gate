@@ -141,7 +141,6 @@ pics/%64.o: $(LIBCBASE)/../port/print/%.c
 
 pics/%64.o: $(LIBCBASE)/../port/regex/%.c
 	$(COMPILE.c) -DM_I18N_MB -DI18N \
-	-I$(LIBCBASE)/../port/regex \
 	-I$(LIBCBASE)/../port/gen -o $@ $<
 	$(POST_PROCESS_O)
 
@@ -208,7 +207,6 @@ pics/%.o: $(LIBCBASE)/../port/print/%.c
 # regex rules
 pics/%.o: $(LIBCBASE)/../port/regex/%.c
 	$(COMPILE.c) -DM_I18N_MB -DI18N \
-	-I$(LIBCBASE)/../port/regex \
 	-I$(LIBCBASE)/../port/gen -o $@ $<
 	$(POST_PROCESS_O)
 
