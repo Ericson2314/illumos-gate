@@ -870,7 +870,8 @@ THREADSOBJS=			\
 	thr.o			\
 	thread_interface.o	\
 	tls.o			\
-	tsd.o
+	tsd.o			\
+	plockstat_stub.o
 
 THREADSMACHOBJS=		\
 	machdep.o
@@ -1072,7 +1073,13 @@ $(DYNLIB) := BUILD.SO = $(LD) -o $@ $(GSHARED) $(DYNFLAGS) $(PICS) $(ALTPICS) $(
 
 MAPFILES =	$(LIBCDIR)/port/mapfile-vers
 
-CPPFLAGS=	-D_REENTRANT -D$(MACH64) -D__$(MACH64) $(THREAD_DEBUG) \
+# $(CPPFLAGS.first) is kept: Makefile.master documents it as the hook for
+# lower makefiles to put include directories ahead of everything else, and
+# replacing CPPFLAGS outright would silently drop it. A cross-build needs it to
+# place the installed headers before the -I flags that individual rules in
+# Makefile.targ add -- notably ../port/regex, which holds a private regex.h.
+CPPFLAGS=	$(CPPFLAGS.first) \
+		-D_REENTRANT -D$(MACH64) -D__$(MACH64) $(THREAD_DEBUG) \
 		-I. -I$(LIBCBASE)/inc -I$(LIBCDIR)/inc $(CPPFLAGS.master)
 
 # __XOPEN_OR_POSIX is necessary to avoid implicit _LARGEFILE_SOURCE which
@@ -1107,10 +1114,18 @@ BUILD.s=	$(AS) $(ASFLAGS) $< -c -o $@
 CSTD=	$(CSTD_GNU99)
 
 # libc method of building an archive
-# The "$(GREP) -v ' L '" part is necessary only until
-# lorder is fixed to ignore thread-local variables.
+#
+# Upstream orders the members with lorder(1) | tsort(1) so that a single-pass
+# link resolves. lorder parses nm(1) output in Solaris' format, which a GNU nm
+# does not quite match: the dependency pairs come out unbalanced and tsort
+# rejects the input with "odd number of tokens", leaving an *empty* archive
+# and a build that appears to have succeeded.
+#
+# The ordering is not actually needed here. `ar -ts` runs immediately after
+# and writes a symbol table, and every linker we care about resolves archive
+# members through that index rather than by member order.
 BUILD.AR= $(RM) $@ ; \
-	$(AR) q $@ `$(LORDER) $(MOSTOBJS:%=$(DIR)/%) | $(GREP) -v ' L ' | $(TSORT)`
+	$(AR) q $@ $(MOSTOBJS:%=$(DIR)/%)
 
 # extra files for the clean target
 CLEANFILES +=			\
@@ -1215,10 +1230,13 @@ genassym: $(GENASSYM_C)
 	$(NATIVECC) $(NATIVE_CFLAGS) -Iinc -I$(LIBCDIR)/inc $(CPPFLAGS.native) \
 		$(LDFLAGS.native) -o $@ $(GENASSYM_C)
 
-OFFSETS = $(LIBCDIR)/$(MACH)/offsets.in
+#OFFSETS = $(LIBCDIR)/$(MACH)/offsets.in
 
-assym.h: $(OFFSETS) genassym
-	$(OFFSETS_CREATE) <$(OFFSETS) >$@
+# $(OFFSETS_CREATE) needs ctfstabs, which is not available when cross-building,
+# so assym.h is generated from genassym alone. Note that the prerequisite on
+# genassym itself must be kept: commenting out the whole list stops genassym
+# from ever being built, and the recipe then runs a ./genassym that is absent.
+assym.h: genassym
 	./genassym >>$@
 
 # derived C source and related explicit dependencies

@@ -28,7 +28,9 @@
 #include <stdio.h>
 #include <stddef.h>
 #include <signal.h>
+#include <setjmp.h>
 #include <ucontext.h>
+#include "libc_int.h"
 #include <sys/stack.h>
 #include <sys/synch.h>
 #include <sys/synch32.h>
@@ -60,6 +62,50 @@ main(void)
 	(void) printf("#define\tRIP_OFF\t0x%x\n", REG_RIP * 8);
 	(void) printf("#define\tRAX_OFF\t0x%x\n", REG_RAX * 8);
 	(void) printf("#define\tRSP_OFF\t0x%x\n", REG_RSP * 8);
+
+	/*
+	 * The values below are normally produced from $(LIBCDIR)/$(MACH)/
+	 * offsets.in by $(OFFSETS_CREATE), which drives ctfstabs and so needs
+	 * CTF data. That is not available when cross-building, so emit them
+	 * here instead -- they are all plain sizeof/offsetof over the same
+	 * headers ctfstabs would have read. Keep this list in sync with
+	 * offsets.in.
+	 */
+	(void) printf("#define\tSIZEOF_TLS_T\t0x%zx\n", sizeof (tls_t));
+	(void) printf("#define\tSIZEOF_UCONTEXT_T\t0x%zx\n",
+	    sizeof (ucontext_t));
+	(void) printf("#define\tSIZEOF_SIGJMP_BUF\t0x%zx\n",
+	    sizeof (sigjmp_buf));
+
+	(void) printf("#define\tTI_MODULEID\t0x%zx\n",
+	    offsetof(TLS_index, ti_moduleid));
+	(void) printf("#define\tTI_TLSOFFSET\t0x%zx\n",
+	    offsetof(TLS_index, ti_tlsoffset));
+
+	(void) printf("#define\tTLS_DATA\t0x%zx\n", offsetof(tls_t, tls_data));
+
+	(void) printf("#define\tSS_SP\t0x%zx\n", offsetof(stack_t, ss_sp));
+	(void) printf("#define\tSS_SIZE\t0x%zx\n", offsetof(stack_t, ss_size));
+
+	(void) printf("#define\tUC_MCONTEXT_GREGS\t0x%zx\n",
+	    offsetof(ucontext_t, uc_mcontext.gregs));
+
+	(void) printf("#define\tUL_TLSENT\t0x%zx\n",
+	    offsetof(ulwp_t, ul_tlsent));
+	(void) printf("#define\tUL_NTLSENT\t0x%zx\n",
+	    offsetof(ulwp_t, ul_ntlsent));
+	(void) printf("#define\tUL_USTACK\t0x%zx\n",
+	    offsetof(ulwp_t, ul_ustack));
+	(void) printf("#define\tUL_VFORK\t0x%zx\n",
+	    offsetof(ulwp_t, ul_vfork));
+	(void) printf("#define\tUL_SCHEDCTL_CALLED\t0x%zx\n",
+	    offsetof(ulwp_t, ul_schedctl_called));
+	(void) printf("#define\tUL_SCHEDCTL\t0x%zx\n",
+	    offsetof(ulwp_t, ul_schedctl));
+	(void) printf("#define\tUL_SIGLINK\t0x%zx\n",
+	    offsetof(ulwp_t, ul_siglink));
+	(void) printf("#define\tUL_SIGMASK\t0x%zx\n",
+	    offsetof(ulwp_t, ul_sigmask));
 
 	return (0);
 }

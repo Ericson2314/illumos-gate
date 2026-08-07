@@ -26,7 +26,7 @@
 
 	.file	"cerror.s"
 
-/ C return sequence which sets errno, returns -1.
+// C return sequence which sets errno, returns -1.
 
 #include <SYS.h>
 
