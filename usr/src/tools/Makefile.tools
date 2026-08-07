@@ -55,9 +55,10 @@ CERRWARN +=		-_gnu=-Wno-unknown-pragmas
 CPPFLAGS=		-D_TS_ERRNO
 ELFSIGN_O=		$(TRUE)
 LDLIBS=
-LDFLAGS=		$(MAPFILE.NES:%=-Wl,-M%) $(MAPFILE.NED:%=-Wl,-M%) \
-			    $(MAPFILE.PGA:%=-Wl,-M%) \
-			    $(BDIRECT)
+#LDFLAGS=		$(MAPFILE.NES:%=-Wl,-M%) $(MAPFILE.NED:%=-Wl,-M%) \
+#			    $(MAPFILE.PGA:%=-Wl,-M%) \
+#			    $(BDIRECT)
+LDFLAGS=
 
 NATIVE_LIBS += libc.so
 
