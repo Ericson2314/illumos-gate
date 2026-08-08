@@ -39,7 +39,14 @@
 #include <zlib.h>
 #include <sys/debug.h>
 
-#ifdef _LP64
+/*
+ * The decompression library is dlopen()ed by absolute path.  On a host that is
+ * not illumos there is no /usr/lib/64 to find it in, so let the build name it;
+ * $LIBCTF_DECOMPRESSOR still overrides at run time either way.
+ */
+#ifdef	CTF_ZLIB_PATH
+static const char *_libctf_zlib = CTF_ZLIB_PATH;
+#elif defined(_LP64)
 static const char *_libctf_zlib = "/usr/lib/64/libz.so.1";
 #else
 static const char *_libctf_zlib = "/usr/lib/libz.so.1";
@@ -69,7 +76,18 @@ typedef struct ctf_zdata {
 	z_stream	czd_zstr;
 } ctf_zdata_t;
 
+/*
+ * `#pragma init' is a Sun/illumos compiler directive.  gcc on a foreign host
+ * ignores it -- silently, and catastrophically: _PAGEMASK would stay 0, so
+ * ctf_sect_munmap()'s `addr & ~_PAGEMASK' would be the whole address and it
+ * would munmap() from 0 to the end of the section, taking the heap with it.
+ * -DCTF_NATIVE_COMPAT is set only by tools/ctf/Makefile.ctf.native; on illumos
+ * the pragma is honoured and nothing changes.
+ */
 #pragma init(_libctf_init)
+#ifdef	CTF_NATIVE_COMPAT
+__attribute__((__constructor__))
+#endif
 void
 _libctf_init(void)
 {
