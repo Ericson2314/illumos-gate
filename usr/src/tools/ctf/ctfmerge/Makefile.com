@@ -19,7 +19,7 @@ LDLIBS += -lctf -lelf
 
 LDFLAGS += \
 	-L$(ROOTONBLDLIBMACH) \
-	'-R$$ORIGIN/../../lib/$(MACH)' \
+	-Wl,-rpath,'$$ORIGIN/../../lib/$(MACH)' \
 
 NATIVE_LIBS += libelf.so
 CPPFLAGS += -include ../../common/ctf_headers.h
@@ -43,5 +43,12 @@ install: $(ROOTONBLDMACHPROG)
 
 clean:
 	$(RM) $(OBJS) $(LINTFILES)
+
+#
+# -R is illumos ld's spelling of what GNU ld calls -rpath.  Makefile.ctf.native
+# also empties the illumos-ld-only macros that feed LDFLAGS.  It must come
+# after every include that pulls in Makefile.master.
+#
+include ../../Makefile.ctf.native
 
 include $(SRC)/tools/Makefile.targ

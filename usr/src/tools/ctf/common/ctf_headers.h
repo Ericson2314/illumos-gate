@@ -70,6 +70,17 @@
  * kernel, and we can't easily pick it up otherwise.
  */
 
+/*
+ * On a host whose libc is not illumos', the headers below want the "_t"
+ * integer spellings and boolean_t that illumos' <sys/types.h> would have
+ * supplied.  This has to come first, ahead of them.  -DCTF_NATIVE_COMPAT is
+ * set only by tools/ctf/Makefile.ctf.native; on illumos the real headers
+ * already provide all of it.
+ */
+#ifdef	CTF_NATIVE_COMPAT
+#include "../native/native_compat.h"
+#endif
+
 #include <uts/common/sys/ccompile.h>
 #include <uts/common/sys/ctf.h>
 #include <uts/common/sys/ctf_api.h>

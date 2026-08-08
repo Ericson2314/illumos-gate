@@ -36,14 +36,20 @@ include ../../../Makefile.tools
 # in $(SRC)/tools/ctf/common/ctf_headers.h.
 #
 
+# The `-nostdinc' plus explicit `-I/usr/include' dance only makes sense when
+# the host's /usr/include *is* illumos'.  On a foreign host it is not, and the
+# host compiler has to be left to find its own libc headers -- so both are
+# dropped, along with $(NATIVE_ADJUNCT)/include, which names the same place.
+#
+# $(SRC)/uts/common moves to Makefile.ctf.native, as an -idirafter: any -I is
+# searched ahead of the host's own directories, where illumos' <sys/types.h>
+# would shadow the host's.
+#
 HDRDIRS= \
-	-_gcc=-nostdinc \
 	-I../../common \
 	-I$(SRC) \
-	-I/usr/include \
-	-I$(SRC)/uts/common \
 	-I$(SRC)/common/ctf \
-	-I$(NATIVE_ADJUNCT)/include
+	-I$(SRC)/lib/libctf/common
 
 CPPFLAGS += $(HDRDIRS)
 CFLAGS += $(CCVERBOSE)
