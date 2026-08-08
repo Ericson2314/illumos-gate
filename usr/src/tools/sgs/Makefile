@@ -25,6 +25,7 @@ install :=	TARGET= install
 clean :=	TARGET= clean
 clobber :=	TARGET= clobber
 
+sgsmsg: include
 ld: sgsmsg include libconv libelf libld
 libconv: sgsmsg include
 libelf: sgsmsg include
@@ -33,7 +34,15 @@ liblddbg: sgsmsg libconv include
 
 all install clean clobber: $(SUBDIRS)
 
+#
+# ROOTONBLD (set by Makefile.tools) and ONBLD_TOOLS (set by Makefile.master)
+# both have defaults, so values given on this make's command line do not reach
+# the sub-makes.  Forward them explicitly when set, so that this tree can be
+# built and installed somewhere other than the in-tree proto area.  ONBLD_TOOLS
+# matters because libconv and friends run the sgsmsg built here, and find it
+# under $(ONBLD_TOOLS)/bin/$(MACH).
+#
 $(SUBDIRS): FRC
-	@cd $@; pwd; $(MAKE) $(TARGET)
+	@cd $@; pwd; $(MAKE) $(TARGET) $(ROOTONBLD:%=ROOTONBLD=%) $(ONBLD_TOOLS:%=ONBLD_TOOLS=%)
 
 FRC:

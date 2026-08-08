@@ -31,6 +31,11 @@ ROOTHDRS=	dlfcn.h \
 		libelf.h \
 		proc_service.h \
 		rtld_db.h \
+		elf.h \
+		procfs.h \
+		nlist.h \
+		syms.h \
+		storclass.h \
 		link.h
 
 SYSHDRS=	sys/elf.h \
@@ -43,10 +48,19 @@ SYSHDRS=	sys/elf.h \
 		sys/auxv_SPARC.h \
 		sys/auxv_386.h \
 		sys/avl.h \
+		sys/avl_impl.h \
 		sys/link.h \
 		sys/machelf.h \
 		sys/note.h \
-		sys/systeminfo.h
+		sys/debug.h \
+		sys/secflags.h \
+		sys/sysmacros.h \
+		sys/isa_defs.h \
+		sys/feature_tests.h \
+		sys/stddef.h \
+		sys/procset.h \
+		sys/ctype.h \
+		sys/ccompile.h
 
 sys:
 	$(MKDIR) -p sys
