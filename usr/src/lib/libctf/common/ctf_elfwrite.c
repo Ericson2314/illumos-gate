@@ -68,6 +68,26 @@ ctf_write_elf(ctf_file_t *fp, Elf *src, Elf *dst, int flags)
 		goto out;
 	}
 
+#ifdef CTF_NATIVE_COMPAT
+	/*
+	 * elfutils' libelf validates, in elf_update(), that every section with
+	 * a non-zero, non-one sh_entsize has an sh_size that is a multiple of
+	 * it -- and it applies that to sections it is merely copying through,
+	 * not just to ones it has been asked to lay out.  illumos' link-editor
+	 * emits .rodata as SHF_MERGE with sh_entsize 8 while letting sh_size
+	 * be whatever the merged contents came to, so libc.so.1 trips the
+	 * check and the whole write fails with ELF_E_INVALID_SHENTSIZE, which
+	 * libctf reports as the far less helpful "Elf library failure".
+	 *
+	 * ELF_F_PERMISSIVE is exactly the escape hatch elfutils provides for
+	 * this: it suppresses the consistency checks on data libelf did not
+	 * generate itself.  Nothing here depends on those sections' contents,
+	 * so there is nothing to get wrong.  illumos' own libelf never had the
+	 * check, which is why this is needed only for the foreign-host build.
+	 */
+	(void) elf_flagelf(dst, ELF_C_SET, ELF_F_PERMISSIVE);
+#endif
+
 	if (gelf_newehdr(dst, gelf_getclass(src)) == 0) {
 		ret = ctf_set_errno(fp, ECTF_ELF);
 		goto out;
