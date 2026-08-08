@@ -24,7 +24,7 @@ YACCPAR =	yaccpar
 
 include ../Makefile.tools
 
-CPPFLAGS =	-I$(SGSDIR)/include
+CPPFLAGS =	-I$(SGSDIR)/include -DSGS_NO_ELF
 CSTD =		$(CSTD_GNU99)
 
 ROOTYACCPAR =	$(YACCPAR:%=$(ROOTONBLDSHLIBCCS)/%)

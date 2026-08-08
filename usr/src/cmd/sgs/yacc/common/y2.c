@@ -395,7 +395,7 @@ setup(int argc, char *argv[])
  *	This message is passed to error() function.
  */
 					error(gettext(
-					    "type redeclaration of token %ws"),
+					    "type redeclaration of token %ls"),
 					    tokset[t].name);
 					}
 				else
@@ -410,7 +410,7 @@ setup(int argc, char *argv[])
  *	yacc man page or yacc user's document.
  */
 					error(gettext(
-				"type redeclaration of nonterminal %ws"),
+				"type redeclaration of nonterminal %ls"),
 					    nontrst[t-NTBASE].name);
 					}
 				else
@@ -486,7 +486,7 @@ setup(int argc, char *argv[])
  *	This message is passed to error() function.
  */
 						error(gettext(
-				"%ws is not a token."),
+				"%ls is not a token."),
 						    tokname);
 					}
 					if (lev & ~04) {
@@ -496,7 +496,7 @@ setup(int argc, char *argv[])
  *	This message is passed to error() function.
  */
 							error(gettext(
-				"redeclaration of precedence of %ws"),
+				"redeclaration of precedence of %ls"),
 							    tokname);
 						SETASC(toklev[j], lev);
 						SETPLEV(toklev[j], i);
@@ -504,7 +504,7 @@ setup(int argc, char *argv[])
 						if (ASSOC(toklev[j]))
 							(void) warning(1,
 							    gettext(
-				"redeclaration of precedence of %ws."),
+				"redeclaration of precedence of %ls."),
 							    tokname);
 						SETASC(toklev[j], lev);
 						}
@@ -515,7 +515,7 @@ setup(int argc, char *argv[])
  * TRANSLATION_NOTE  -- This is a message from yacc.
  *	This message is passed to error() function.
  */
-						"redeclaration of type of %ws"),
+						"redeclaration of type of %ls"),
 							    tokname);
 						SETTYPE(toklev[j], ty);
 						}
@@ -527,7 +527,7 @@ setup(int argc, char *argv[])
  *	This message is passed to error() function.
  */
 							error(gettext(
-				"type number of %ws should be defined earlier"),
+				"type number of %ls should be defined earlier"),
 							    tokset[j].name);
 							}
 						if (numbval >= -YYFLAG1) {
@@ -691,7 +691,7 @@ setup(int argc, char *argv[])
  *	Do not translate %%prec.
  */
 				error(gettext(
-				    "nonterminal %ws illegal after %%prec"),
+				    "nonterminal %ls illegal after %%prec"),
 				    nontrst[j-NTBASE].name);
 			levprd[nprod] = toklev[j] & ~04;
 			t = gettok();
@@ -1031,7 +1031,7 @@ defout(void)
 		cp = tokset[i].name;
 		if (*cp == L' ')	/* literals */
 		{
-			(void) fprintf(fdebug, "\t\"%ws\",\t%d,\n",
+			(void) fprintf(fdebug, "\t\"%ls\",\t%d,\n",
 			    tokset[i].name + 1, tokset[i].value);
 			continue;	/* was cp++ */
 		}
@@ -1045,14 +1045,14 @@ defout(void)
 		}
 
 		(void) fprintf(fdebug,
-		    "\t\"%ws\",\t%d,\n", tokset[i].name,
+		    "\t\"%ls\",\t%d,\n", tokset[i].name,
 		    tokset[i].value);
 		(void) fprintf(ftable,
-		    "# define %ws %d\n", tokset[i].name,
+		    "# define %ls %d\n", tokset[i].name,
 		    tokset[i].value);
 		if (fdefine != NULL)
 			(void) fprintf(fdefine,
-			    "# define %ws %d\n",
+			    "# define %ls %d\n",
 			    tokset[i].name,
 			    tokset[i].value);
 
@@ -1210,7 +1210,7 @@ begin:
 		if (!wscmp(tokname, L"union"))
 			return (UNION);
 		error(gettext(
-		    "invalid escape, or illegal reserved word: %ws"),
+		    "invalid escape, or illegal reserved word: %ls"),
 		    tokname);
 		}
 
@@ -1246,7 +1246,7 @@ fdtype(int t)
 		v = TYPE(toklev[t]);
 	if (v <= 0)
 		error(gettext(
-		    "must specify type for %ws"),
+		    "must specify type for %ls"),
 		    (t >= NTBASE) ? nontrst[t-NTBASE].name:
 		    tokset[t].name);
 	return (v);
@@ -1272,7 +1272,7 @@ chfind(int t, wchar_t *s)
 	/* cannot find name */
 	if (t > 1)
 		error(gettext(
-		"%ws should have been defined earlier"), s);
+		"%ls should have been defined earlier"), s);
 	return (defin(t, s));
 }
 
@@ -1455,7 +1455,7 @@ swt:
 				if (tok < 0)
 					tok = fdtype(*prdptr[nprod]);
 				(void) fprintf(faction,
-				    ".%ws", typeset[tok]);
+				    ".%ls", typeset[tok]);
 			}
 			goto loop;
 		}
@@ -1520,7 +1520,7 @@ swt:
 								/* CSTYLED */
 								fdtype(prdptr[nprod][i]);
 							(void) fprintf(faction,
-							    ".%ws",
+							    ".%ls",
 							    typeset[tok]);
 						}
 						goto swt;
@@ -1531,14 +1531,14 @@ swt:
 			 * (Likely id with $ in.)
 			 * If non-terminal is added, remove it from the list.
 			 */
-			(void) fprintf(faction, "$%ws", tokname);
+			(void) fprintf(faction, "$%ls", tokname);
 /*
  * TRANSLATION_NOTE  -- This is a message from yacc.
  *	This message is passed to warning() function.
  *	Do not translate Ansi C.
  */
 			warning(1, gettext(
-	"Illegal character '$' in Ansi C symbol: %ws$%ws."),
+	"Illegal character '$' in Ansi C symbol: %ls$%ls."),
 			    id_name, tokname);
 
 			if (id_sw == 1)
@@ -1580,7 +1580,7 @@ swt:
 				if (tok < 0)
 					tok = fdtype(prdptr[nprod][j+offset]);
 				(void) fprintf(faction,
-				    ".%ws", typeset[tok]);
+				    ".%ls", typeset[tok]);
 			}
 			goto swt;
 		}
@@ -1823,7 +1823,7 @@ lrprnt(void)	/* print out the left and right hand sides */
 		else
 			rhs = m_rhs;
 	}
-	(void) fprintf(fdebug, "\t\"%ws :%ws\",\n", lhstext, rhs);
+	(void) fprintf(fdebug, "\t\"%ls :%ls\",\n", lhstext, rhs);
 	if (m_rhs)
 		free(m_rhs);
 }

@@ -335,7 +335,7 @@ cgoto(void)
 #ifdef DEBUG
 		if (debug) {
 			if (stnum > 1)
-				(void) printf("%ws:\n", sname[stnum/2]);
+				(void) printf("%ls:\n", sname[stnum/2]);
 			pstate(stnum);
 		}
 #endif

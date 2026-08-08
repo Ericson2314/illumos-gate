@@ -90,7 +90,7 @@ output(void)
 							if (foutput != NULL)
 					(void) fprintf(foutput,
 				"\n%d: reduce/reduce conflict"
-				" (red'ns %d and %d ) on %ws",
+				" (red'ns %d and %d ) on %ls",
 							i, -temp1[k],
 							lastred, symnam(k));
 							if (-temp1[k] > lastred)
@@ -279,10 +279,10 @@ go2gen(int c)
 	/* now, we have temp1[c] = 1 if a goto on c in closure of cc */
 
 	if (g2debug && foutput != NULL) {
-		(void) fprintf(foutput, "%ws: gotos on ",
+		(void) fprintf(foutput, "%ls: gotos on ",
 		    nontrst[c].name);
 		NTLOOP(i) if (temp1[i])
-			(void) fprintf(foutput, "%ws ", nontrst[i].name);
+			(void) fprintf(foutput, "%ls ", nontrst[i].name);
 		(void) fprintf(foutput, "\n");
 	}
 
@@ -321,7 +321,7 @@ precftn(int r, int t, int s)
 		if (foutput != NULL)
 			(void) fprintf(foutput,
 			    "\n%d: shift/reduce conflict"
-			    " (shift %d, red'n %d) on %ws",
+			    " (shift %d, red'n %d) on %ls",
 			    s, temp1[t], r, symnam(t));
 		++zzsrconf;
 		return;
@@ -435,20 +435,20 @@ wrstate(int i)
 		return;
 	(void) fprintf(foutput, "\nstate %d\n", i);
 	ITMLOOP(i, pp, qq) {
-		(void) fprintf(foutput, "\t%ws\n", writem(pp->pitem));
+		(void) fprintf(foutput, "\t%ls\n", writem(pp->pitem));
 	}
 	if (tystate[i] == MUSTLOOKAHEAD) {
 		/* print out empty productions in closure */
 		WSLOOP(wsets + (pstate[i + 1] - pstate[i]), u) {
 			if (*(u->pitem) < 0)
 				(void) fprintf(foutput,
-				    "\t%ws\n", writem(u->pitem));
+				    "\t%ls\n", writem(u->pitem));
 		}
 	}
 
 	/* check for state equal to another */
 	TLOOP(j0) if ((j1 = temp1[j0]) != 0) {
-		(void) fprintf(foutput, "\n\t%ws  ", symnam(j0));
+		(void) fprintf(foutput, "\n\t%ls  ", symnam(j0));
 		if (j1 > 0) { /* shift, error, or accept */
 			if (j1 == ACCEPTCODE)
 				(void) fprintf(foutput,  "accept");
@@ -472,7 +472,7 @@ wrstate(int i)
 	for (j0 = 1; j0 <= nnonter; ++j0) {
 		if (temp1[++j1])
 			(void) fprintf(foutput,
-			    "\t%ws  goto %d\n",
+			    "\t%ls  goto %d\n",
 			    symnam(j0 + NTBASE), temp1[j1]);
 	}
 }
@@ -481,14 +481,14 @@ static void
 wdef(wchar_t *s, int n)
 {
 	/* output a definition of s to the value n */
-	(void) fprintf(ftable, "# define %ws %d\n", s, n);
+	(void) fprintf(ftable, "# define %ls %d\n", s, n);
 }
 
 void
 warray(wchar_t *s, int *v, int n)
 {
 	int i;
-	(void) fprintf(ftable, "static const yytabelem %ws[]={\n", s);
+	(void) fprintf(ftable, "static const yytabelem %ls[]={\n", s);
 	for (i = 0; i < n; ) {
 		if (i % 10 == 0)
 			(void) fprintf(ftable, "\n");
@@ -519,7 +519,7 @@ hideprod(void)
 			++j;
 			if (foutput != NULL) {
 				(void) fprintf(foutput,
-				    "Rule not reduced:   %ws\n",
+				    "Rule not reduced:   %ls\n",
 				    writem(prdptr[i]));
 			}
 		}

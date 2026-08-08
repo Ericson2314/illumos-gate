@@ -22,7 +22,7 @@ OBJS =		main.o sub1.o sub2.o sub3.o header.o parser.o
 
 include ../Makefile.tools
 
-CPPFLAGS =	-I$(SGSDIR)/include
+CPPFLAGS =	-I$(SGSDIR)/include -DSGS_NO_ELF
 CSTD=		$(CSTD_GNU99)
 
 # unused labels in yaccpar

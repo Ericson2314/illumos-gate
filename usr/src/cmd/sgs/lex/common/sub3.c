@@ -137,7 +137,7 @@ remch(wchar_t c)
 		if (!isascii(c)) {
 			if (iswprint(c))
 				warning(
-"Non-ASCII character '%wc' in pattern; use -w or -e lex option.", c);
+"Non-ASCII character '%lc' in pattern; use -w or -e lex option.", c);
 			else warning(
 "Non-ASCII character of value %#x in pattern; use -w or -e lex option.", c);
 		}

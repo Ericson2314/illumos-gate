@@ -170,7 +170,7 @@ chd1(void)
 "?(yylineno++,yytchar):yytchar)==EOF?0:yytchar)");
 		(void) fprintf(fout, "#endif\n");
 		(void) fprintf(fout,
-		"# define ECHO (void)fprintf(yyout, \"%%ws\",yytext)\n");
+		"# define ECHO (void)fprintf(yyout, \"%%ls\",yytext)\n");
 		(void) fprintf(fout,
 		"# define REJECT { nstr = yyreject_w(); goto yyfussy;}\n");
 		(void) fprintf(fout, "#define yyless yyless_w\n");
