@@ -67,4 +67,11 @@ install: $(ROOTONBLDMACHPROG)
 clean:
 	$(RM) $(OBJS) $(LINTFILES)
 
+#
+# Everything it takes to build this against a foreign libc and a foreign
+# link-editor.  It must come after every include that pulls in Makefile.master,
+# which would otherwise undo it.
+#
+include ../../Makefile.ctf.native
+
 include ../../Makefile.ctf.targ

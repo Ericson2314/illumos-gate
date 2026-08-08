@@ -24,9 +24,30 @@ CPPFLAGS +=	-I$(SRC)/lib/libctf/common/ \
 		-include ../../common/ctf_headers.h \
 		-DCTF_OLD_VERSIONS \
 		-DCTF_TOOLS_BUILD
-LDLIBS += -lc -lelf -L$(ROOTONBLDLIBMACH) -ldwarf -lavl
-NATIVE_LIBS += libelf.so libavl.so libc.so
-DYNFLAGS += '-R$$ORIGIN/../../lib/$(MACH)'
+#
+# -lavl is illumos'.  Only ctf_dwarf.c uses the AVL interfaces, and the
+# implementation is plain C in $(SRC)/common/avl, so build it in rather than
+# ask a foreign host for a library it does not have.
+#
+#
+# ...and, since this library is what ctfconvert and ctfmerge link against, the
+# stand-ins for the libc entry points a foreign host does not have.  Nothing
+# scopes libctf's symbols here (MAPFILES is empty), so the programs pick these
+# up from it too.
+#
+OBJECTS +=	native_support.o
+
+OBJECTS +=	avl.o
+LDLIBS += -lc -lelf -L$(ROOTONBLDLIBMACH) -ldwarf
+NATIVE_LIBS += libelf.so libc.so
+
+pics/native_support.o:	$(SRC)/tools/ctf/native/native_support.c
+	$(COMPILE.c) $(C_PICFLAGS) -o $@ $(SRC)/tools/ctf/native/native_support.c
+	$(POST_PROCESS_O)
+
+pics/avl.o:	$(SRC)/common/avl/avl.c
+	$(COMPILE.c) $(C_PICFLAGS) -o $@ $(SRC)/common/avl/avl.c
+	$(POST_PROCESS_O)
 
 # As a bootstrapping issue, we can't use the real mapfile because we build
 # early in tools and thus don't have support for assertions.
@@ -50,6 +71,14 @@ $(ROOTONBLDLIBMACH)/$(LIBLINKS): $(ROOTONBLDLIBMACH)/$(LIBLINKS)$(VERS)
 #
 $(DYNLIB) := CTFMERGE_POST= :
 CTFCONVERT_O= :
+
+#
+# The `-R' that used to be appended to DYNFLAGS here is restated as GNU ld's
+# -rpath by Makefile.ctf.native, which also empties the illumos-ld-only macros
+# Makefile.lib feeds into DYNFLAGS.  It must come after every include that
+# pulls in Makefile.master, which would otherwise undo it.
+#
+include ../../Makefile.ctf.native
 
 include $(SRC)/lib/Makefile.targ
 include $(SRC)/lib/libctf/Makefile.shared.targ
