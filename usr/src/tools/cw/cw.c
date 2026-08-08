@@ -152,8 +152,10 @@
 #include <string.h>
 #include <unistd.h>
 #include <dirent.h>
+#include <stdint.h>
 
 #include <sys/param.h>
+#include <sys/resource.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/utsname.h>
@@ -243,7 +245,7 @@ typedef struct xarch_table {
  * The translation table for the -xarch= flag used in the Studio compilers.
  */
 static const xarch_table_t xtbl[] = {
-#if defined(__x86)
+#if defined(__x86) || defined(__i386__) || defined(__x86_64__)
 	{ "generic",	SS11, {NULL} },
 	{ "generic64",	(SS11|M64), { "-m64", "-mtune=opteron" } },
 	{ "amd64",	(SS11|M64), { "-m64", "-mtune=opteron" } },
@@ -257,7 +259,7 @@ static const xarch_table_t xtbl[] = {
 static int xtbl_size = sizeof (xtbl) / sizeof (xarch_table_t);
 
 static const char *xchip_tbl[] = {
-#if defined(__x86)
+#if defined(__x86) || defined(__i386__) || defined(__x86_64__)
 	"386",		"-mtune=i386", NULL,
 	"486",		"-mtune=i486", NULL,
 	"pentium",	"-mtune=pentium", NULL,
@@ -267,7 +269,7 @@ static const char *xchip_tbl[] = {
 };
 
 static const char *xtarget_tbl[] = {
-#if defined(__x86)
+#if defined(__x86) || defined(__i386__) || defined(__x86_64__)
 	"pentium_pro",	"-march=pentiumpro", NULL,
 #endif	/* __x86 */
 	NULL,		NULL
@@ -682,7 +684,7 @@ do_gcc(cw_ictx_t *ctx)
 			}
 			if (strcmp(arg, "-m64") == 0) {
 				newae(ctx->i_ae, "-m64");
-#if defined(__x86)
+#if defined(__x86) || defined(__i386__) || defined(__x86_64__)
 				newae(ctx->i_ae, "-mtune=opteron");
 #endif
 				mflag |= M64;
@@ -752,7 +754,12 @@ do_gcc(cw_ictx_t *ctx)
 				break;
 			}
 
-#if defined(__x86)
+/*
+ * __x86 is a Studio predefined macro; gcc and clang spell it __i386__ or
+ * __x86_64__. Accept all three so cw still maps -Wu,-save_args when it is
+ * itself built by a non-Studio compiler, e.g. when cross-building from Linux.
+ */
+#if defined(__x86) || defined(__i386__) || defined(__x86_64__)
 			if (strcmp(arg, "-Wu,-save_args") == 0) {
 				newae(ctx->i_ae, "-msave-args");
 				break;
@@ -804,7 +811,7 @@ do_gcc(cw_ictx_t *ctx)
 
 				error(arg);
 				break;
-#if defined(__x86)
+#if defined(__x86) || defined(__i386__) || defined(__x86_64__)
 			case 'm':
 				if (strcmp(arg, "-xmodel=kernel") == 0) {
 					newae(ctx->i_ae, "-ffreestanding");
