@@ -33,6 +33,7 @@
 /* Copyright 1976, Bell Telephone Laboratories, Inc. */
 
 #include <string.h>
+#include <unistd.h>
 #include "once.h"
 #include "sgs.h"
 #include <locale.h>
@@ -74,6 +75,12 @@ main(int argc, char **argv)
 	char *apath = NULL;
 	char *ypath;
 	Boolean eoption = 0, woption = 0;
+
+	/*
+	 * Not a static initialiser: stderr is not a constant expression in
+	 * every libc.
+	 */
+	errorf = stderr;
 
 	sargv = argv;
 	sargc = argc;

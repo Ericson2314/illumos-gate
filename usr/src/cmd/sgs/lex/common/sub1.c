@@ -673,7 +673,7 @@ gch(void)
 }
 
 int
-mn2(int a, int d, int c)
+mn2(int a, intptr_t d, intptr_t c)
 {
 	if (tptr >= treesize) {
 		tptr++;
@@ -720,7 +720,7 @@ mn2(int a, int d, int c)
 }
 
 int
-mn1(int a, int d)
+mn1(int a, intptr_t d)
 {
 	if (tptr >= treesize) {
 		tptr++;
@@ -889,13 +889,13 @@ sect1dump(void)
 		(void) printf("str	trans\n");
 		i = -1;
 		while (def[++i])
-			(void) printf("%ws\t%ws\n", def[i], subs[i]);
+			(void) printf("%ls\t%ls\n", def[i], subs[i]);
 	}
 	if (sname[0]) {
 		(void) printf("start names\n");
 		i = -1;
 		while (sname[++i])
-			(void) printf("%ws\n", sname[i]);
+			(void) printf("%ls\n", sname[i]);
 	}
 	if (chset == TRUE) {
 		(void) printf("char set changed\n");
@@ -988,14 +988,14 @@ treedump(void)
 				p = (CHR *)right[t];
 				(void) printf("exstart %s", sname[*p++-1]);
 				while (*p)
-					(void) printf(", %ws", sname[*p++-1]);
+					(void) printf(", %ls", sname[*p++-1]);
 				(void) printf(" %d", left[t]);
 				break;
 			case RSCON:
 				p = (CHR *)right[t];
 				(void) printf("start %s", sname[*p++-1]);
 				while (*p)
-					(void) printf(", %ws", sname[*p++-1]);
+					(void) printf(", %ls", sname[*p++-1]);
 				(void) printf(" %d", left[t]);
 				break;
 			case DOT:

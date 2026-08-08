@@ -35,7 +35,7 @@
 #define YYSTYPE union _yystype_
 union _yystype_
 {
-	int	i;
+	intptr_t	i;
 	CHR	*cp;
 };
 int	peekon = 0; /* need this to check if "^" came in a definition section */
@@ -313,20 +313,28 @@ yylex(void)
 						sectbegin = TRUE;
 						i = treesize*(sizeof(*name)+sizeof(*left)+
 							sizeof(*right)+sizeof(*nullstr)+sizeof(*parent))+ALITTLEEXTRA;
-						c = (int)myalloc(i,1);
-						if(c == 0)
+						/*
+						 * Probe that there is enough memory for the
+						 * parse tree, then hand it straight back.
+						 * This used to round-trip the pointer through
+						 * an int, which truncates it in a 64-bit
+						 * build and makes the free() below corrupt
+						 * the heap -- lex then dies in a later
+						 * allocation, and yacc reports a double free.
+						 */
+						p = (CHR *)myalloc(i,1);
+						if(p == NULL)
 							error("Too little core for parse tree");
-						p = (CHR *)c;
 						free(p);
 						/*LINTED: E_BAD_PTR_CAST_ALIGN*/
-						name = (int *)myalloc(treesize,sizeof(*name));
+						name = (intptr_t *)myalloc(treesize,sizeof(*name));
 						/*LINTED: E_BAD_PTR_CAST_ALIGN*/
-						left = (int *)myalloc(treesize,sizeof(*left));
+						left = (intptr_t *)myalloc(treesize,sizeof(*left));
 						/*LINTED: E_BAD_PTR_CAST_ALIGN*/
-						right = (int *)myalloc(treesize,sizeof(*right));
+						right = (intptr_t *)myalloc(treesize,sizeof(*right));
 						nullstr = myalloc(treesize,sizeof(*nullstr));
 						/*LINTED: E_BAD_PTR_CAST_ALIGN*/
-						parent = (int *)myalloc(treesize,sizeof(*parent));
+						parent = (intptr_t *)myalloc(treesize,sizeof(*parent));
 						if(name == 0 || left == 0 || right == 0 || parent == 0 || nullstr == 0)
 							error("Too little core for parse tree");
 						return(freturn(DELIM));
@@ -470,7 +478,7 @@ Character table (%t) is supported only in ASCII compatibility mode.\n");
 							if(p[0]=='/' && p[1]=='*')
 								cpycom(p);
 							else
-								(void) fprintf(fout, "%ws\n", p);
+								(void) fprintf(fout, "%ls\n", p);
 						if(p[0] == '%') continue;
 						if (*p) error("EOF before %%%%");
 						else error("EOF before %%}");
@@ -500,7 +508,7 @@ start:
 							if (*t == 0) continue;
 							i = sptr*2;
 							if(!ratfor)(void) fprintf(fout,"# ");
-							(void) fprintf(fout, "define %ws %d\n", t, i);
+							(void) fprintf(fout, "define %ls %d\n", t, i);
 							scopy(t,sp);
 							sname[sptr] = sp;
 							/* XCU4: save exclusive flag with start name */
@@ -521,7 +529,7 @@ start:
 				case ' ': case '\t':		/* must be code */
 					lgate();
 					if( p[1]=='/' && p[2]=='*' ) cpycom(p);
-					else (void) fprintf(fout, "%ws\n", p);
+					else (void) fprintf(fout, "%ls\n", p);
 					continue;
 				case '/':	/* look for comments */
 					lgate();
@@ -619,7 +627,7 @@ start:
 						if(buf[0]=='/' && buf[1]=='*')
 							cpycom(buf);
 						else
-							(void) fprintf(fout, "%ws\n", buf);
+							(void) fprintf(fout, "%ls\n", buf);
 					continue;
 					}
 				if(peek == '%'){
@@ -706,7 +714,7 @@ start:
 					token[i] = 0;
 					i = lookup(token,def);
 					if(i < 0)
-						error("definition %ws not found",token);
+						error("definition %ls not found",token);
 					else
 						munput('s',(CHR *)(subs[i]));
 					if (peek == '^')
@@ -736,7 +744,7 @@ start:
 					if(i < 0) {
 						fatal = 0;
 						n_error++;
-						error("undefined start condition %ws",token);
+						error("undefined start condition %ls",token);
 						fatal = 1;
 						continue;
 						}
@@ -932,9 +940,9 @@ Character range specified between different codesets.");
 		else
 			(void) fprintf(fout,
 				"\n# line %d \"%s\"\n", yyline-1, sargv[optind]);
-		(void) fprintf(fout, "%ws\n", buf);
+		(void) fprintf(fout, "%ls\n", buf);
 		while(getl(buf) && !eof)
-			(void) fprintf(fout, "%ws\n", buf);
+			(void) fprintf(fout, "%ls\n", buf);
         }
 
 	return(freturn(0));

@@ -63,7 +63,7 @@ int	ctable[2*NCH] = {
 };
 
 int	ZCH = NCH;
-FILE	*fout = NULL, *errorf = {stderr};
+FILE	*fout = NULL, *errorf = NULL;
 int	sect = DEFSECTION;
 int	prev = '\n';	/* previous input character */
 int	pres = '\n';	/* present input character */
@@ -106,10 +106,10 @@ int pflag;
 int chset;	/* 1 = char set modified */
 FILE *fin, *fother;
 int fptr;
-int *name;
-int *left;
-int *right;
-int *parent;
+intptr_t *name;
+intptr_t *left;
+intptr_t *right;
+intptr_t *parent;
 Boolean *nullstr;
 int tptr;
 CHR pushc[TOKENSIZE];

@@ -592,7 +592,7 @@ prlook(LOOKSETS *p)
 		(void) fprintf(foutput, " { ");
 		TLOOP(j) {
 			if (BIT(pp, j))
-				(void) fprintf(foutput, "%ws ", symnam(j));
+				(void) fprintf(foutput, "%ls ", symnam(j));
 		}
 		(void) fprintf(foutput,  "}");
 	}
@@ -652,7 +652,7 @@ cpres(void)
  *	look at translated yacc document.
  */
 			error(gettext(
-			"undefined nonterminal: %ws"),
+			"undefined nonterminal: %ls"),
 			    nontrst[i].name);
 		}
 	}
@@ -725,7 +725,7 @@ cpfir(void)
 		return;
 	if ((foutput != NULL)) {
 		NTLOOP(i) {
-			(void) fprintf(foutput, "\n%ws: ", nontrst[i].name);
+			(void) fprintf(foutput, "\n%ls: ", nontrst[i].name);
 			prlook(pfirst[i]);
 			(void) fprintf(foutput, " %d\n", pempty[i]);
 		}
@@ -825,7 +825,7 @@ putitem(int *ptr, LOOKSETS *lptr)
 
 	if (pidebug && (foutput != NULL))
 		(void) fprintf(foutput,
-		    "putitem(%ws), state %d\n", writem(ptr), nstate);
+		    "putitem(%ls), state %d\n", writem(ptr), nstate);
 	j = pstate[nstate+1];
 	j->pitem = ptr;
 	if (!nolook)
@@ -895,7 +895,7 @@ cempty(void)
  *	translated in these documents also.
  */
 			error(gettext(
-			"nonterminal %ws never derives any token string"),
+			"nonterminal %ls never derives any token string"),
 			    nontrst[i].name);
 		}
 	}
@@ -991,7 +991,7 @@ stagen(void)
 			NTLOOP(j) {
 				if (temp1[j])
 					(void) fprintf(foutput,
-					    "%ws %d, ", nontrst[j].name,
+					    "%ls %d, ", nontrst[j].name,
 					    temp1[j]);
 			}
 			(void) fprintf(foutput, "\n");
@@ -1125,7 +1125,7 @@ closure(int i)
 			if (u->flag)
 				(void) fprintf(foutput, "flag set!\n");
 			u->flag = 0;
-			(void) fprintf(foutput, "\t%ws", writem(u->pitem));
+			(void) fprintf(foutput, "\t%ls", writem(u->pitem));
 			prlook(&u->ws);
 			(void) fprintf(foutput,  "\n");
 		}

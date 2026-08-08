@@ -45,14 +45,39 @@ extern "C" {
 #endif
 
 #ifndef	_ASM
+#include <stdlib.h>
+#include <stdarg.h>
+#include <assert.h>
+/*
+ * lex and yacc include this header only for the SGU_* identification strings
+ * below, and are built for the *build* host, where illumos' ELF headers are
+ * not available. Let them opt out of the ELF vocabulary.
+ */
+#ifndef	SGS_NO_ELF
 #include <sys/types.h>
 #include <sys/machelf.h>
 #include <sys/stddef.h>
-#include <stdlib.h>
-#include <stdarg.h>
 #include <libelf.h>
-#include <assert.h>
 #include <alist.h>
+#else
+#include <stddef.h>
+#include <sys/types.h>
+/*
+ * The rest of this header is written in illumos' _t integer spellings. A
+ * host <sys/types.h> need not have them; redeclaring a typedef with the same
+ * underlying type is legal C11, so this is a no-op where they already exist.
+ */
+typedef unsigned char	uchar_t;
+typedef unsigned short	ushort_t;
+typedef unsigned int	uint_t;
+typedef unsigned long	ulong_t;
+/*
+ * From <sys/ccompile.h>, which arrives with illumos' <sys/types.h>.
+ */
+#ifndef	__NORETURN
+#define	__NORETURN	__attribute__((__noreturn__))
+#endif
+#endif	/* SGS_NO_ELF */
 #endif	/* _ASM */
 
 /*
