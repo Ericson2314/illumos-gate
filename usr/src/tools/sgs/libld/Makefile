@@ -40,9 +40,14 @@ include		../Makefile.com
 LDLIBS =	-L../libconv -lconv -L$(ROOTONBLDLIBMACH64) -llddbg -lelf -lc
 NATIVE_LIBS +=	libc.so
 
+#
+# -I$(SRC)/uts/common is deliberately absent: it would put illumos'
+# <sys/types.h> and <sys/int_types.h> ahead of the host's, and the two
+# redefine each other's fixed-width integer types.  The uts headers libld
+# genuinely wants are staged into ../include instead.
+#
 CPPFLAGS += -DUSE_LIBLD_MALLOC -I$(SRC)/lib/libc/inc \
-	    -I$(SRC)/uts/common/krtld -I$(SRC)/uts/sparc \
-	    -I$(SRC)/uts/common
+	    -I$(SRC)/uts/common/krtld
 
 DYNFLAGS +=	$(VERSREF) '-Wl,-R$$ORIGIN'
 

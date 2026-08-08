@@ -26,10 +26,21 @@ include		../../Makefile.tools
 include		$(SRC)/cmd/sgs/ld/Makefile.com
 include		../Makefile.com
 
-LDLIBS =	-lumem -L../libconv -L$(ROOTONBLDLIBMACH64) -lld -lelf -lconv
-NATIVE_LIBS +=	libc.so libumem.so
-MAPFILES =	$(SRCDIR)/common/mapfile-intf
-RPATH =		'-R$$ORIGIN/../../lib/$(MACH)/64'
+#
+# -lumem is dropped: nothing under cmd/sgs calls a umem_* interface, it is
+# linked purely as a faster malloc, and libumem is illumos'.
+#
+LDLIBS =	-L../libconv -L$(ROOTONBLDLIBMACH64) -lld -lelf -lconv
+NATIVE_LIBS +=	libc.so
+
+#
+# mapfile-intf is written in illumos mapfile syntax, which is precisely what
+# the host link-editor cannot read -- and what the ld being built here exists
+# to provide.  It only restricts symbol visibility, so dropping it costs
+# nothing for a build tool.
+#
+MAPFILES =
+RPATH =		-Wl,-rpath,'$$ORIGIN/../../lib/$(MACH)/64'
 
 include		$(SRC)/Makefile.master.64
 include		$(SRC)/Makefile.native

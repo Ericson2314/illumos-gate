@@ -24,6 +24,7 @@
  */
 
 #include	<stdio.h>
+#include	<sys/time.h>
 #include	<stdarg.h>
 #include	<errno.h>
 #include	<strings.h>
@@ -58,9 +59,22 @@ static struct {
 	FILE	*fptr;	/* File to send debug output */
 	int	close_needed;	/* True if explicitly opened stream */
 } dbg_ofile = {
-	stderr,
+	NULL,		/* filled in on first use; see dbg_ofile_fptr() */
 	0
 };
+
+/*
+ * stderr is not necessarily a constant expression -- on some C libraries it
+ * is a variable, not an address in a static array -- so dbg_ofile.fptr cannot
+ * be initialised to it statically.  Default it on first use instead.
+ */
+static FILE *
+dbg_ofile_fptr(void)
+{
+	if (dbg_ofile.fptr == NULL)
+		dbg_ofile.fptr = stderr;
+	return (dbg_ofile.fptr);
+}
 
 
 /*
@@ -70,7 +84,7 @@ void
 dbg_cleanup(void)
 {
 	if (dbg_ofile.close_needed) {
-		(void) fclose(dbg_ofile.fptr);
+		(void) fclose(dbg_ofile_fptr());
 		dbg_ofile.close_needed = 0;
 		dbg_ofile.fptr = stderr;
 	}
@@ -204,9 +218,9 @@ dbg_print(Lm_list *lml, const char *format, ...)
 			}
 		}
 		(void) fputs(prestr ? prestr : MSG_INTL(MSG_DBG_AOUT_FMT),
-		    dbg_ofile.fptr);
+		    dbg_ofile_fptr());
 	} else
-		(void) fputs(MSG_INTL(MSG_DBG_DFLT_FMT), dbg_ofile.fptr);
+		(void) fputs(MSG_INTL(MSG_DBG_DFLT_FMT), dbg_ofile_fptr());
 
 	if (DBG_ISTIME()) {
 		Conv_time_buf_t	buf;
@@ -225,7 +239,7 @@ dbg_print(Lm_list *lml, const char *format, ...)
 	}
 
 	va_start(args, format);
-	(void) vfprintf(dbg_ofile.fptr, format, args);
-	(void) fprintf(dbg_ofile.fptr, MSG_ORIG(MSG_STR_NL));
+	(void) vfprintf(dbg_ofile_fptr(), format, args);
+	(void) fprintf(dbg_ofile_fptr(), MSG_ORIG(MSG_STR_NL));
 	va_end(args);
 }
