@@ -31,18 +31,19 @@ MAN1ONBLDFILES=	cw.1onbld
 include ../Makefile.tools
 
 # Bootstrap problem -- we have to build cw before we can use it
-NATIVECC=	$(NATIVE_GNUC_ROOT)/bin/gcc
+NATIVECC=	gcc
 
 CFLAGS += $(CCVERBOSE)
 
 # Override CFLAGS.  This is needed only for bootstrap of cw.
-CFLAGS=	-O -D__sun -Wall -Werror -std=gnu99 -nodefaultlibs
+CFLAGS=	-O -D__sun -Wall -std=gnu99 -nodefaultlibs
 LDLIBS +=	-Wl,-zassert-deflib=libc.so -lc
-LDFLAGS=	$(MAPFILE.NES:%=-Wl,-M%)
+LDFLAGS=
+#LDFLAGS=	$(MAPFILE.NES:%=-Wl,-M -Wl,%)
 ZASSERTDEFLIB = -Wl,-zassert-deflib
 ZFATALWARNINGS = -Wl,-zfatal-warnings
 ZGUIDANCE = -Wl,-zguidance
-LDFLAGS += -Wl,$(ZDIRECT)
+LDFLAGS += $(ZDIRECT)
 
 $(ROOTONBLDMAN1ONBLDFILES) := FILEMODE=      644
 CSTD=	$(CSTD_GNU99)
