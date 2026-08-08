@@ -32,6 +32,8 @@ extern int yyinteractive;
 extern acl_t *yyacl;
 extern int yylex(void);
 
+static void bad_entry_type(int, char *);
+
 %}
 
 %union {
