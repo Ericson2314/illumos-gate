@@ -61,6 +61,7 @@ CSTD = $(CSTD_GNU99)
 SMATCH=		off
 
 include		$(SRC)/Makefile.native
+include		$(SRC)/Makefile.master.64
 
 .KEEP_STATE:
 
