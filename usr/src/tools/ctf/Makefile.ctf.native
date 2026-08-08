@@ -1,0 +1,138 @@
+#
+# This file and its contents are supplied under the terms of the
+# Common Development and Distribution License ("CDDL"), version 1.0.
+# You may only use this file in accordance with the terms of version
+# 1.0 of the CDDL.
+#
+# A full copy of the text of the CDDL should have accompanied this
+# source.  A copy of the CDDL is also available via the Internet at
+# http://www.illumos.org/license/CDDL.
+#
+
+#
+# What it takes to build the CTF tools on a host that is not illumos.  This is
+# the sibling of tools/sgs/Makefile.com; see the comments there.
+#
+# Unlike tools/sgs -- whose entire purpose is to produce an illumos ld -- these
+# tools have no reason to be linked by one, so the host link-editor and the
+# host's libelf are used throughout.
+#
+# This is deliberately a separate file from Makefile.ctf, and is included
+# *last* by each leaf makefile.  Makefile.ctf is included early, and the leaf
+# makefiles then include Makefile.lib / Makefile.tools again -- which re-runs
+# Makefile.master and would undo every assignment below.
+#
+
+#
+# The force-include covers the translation units that reach illumos headers on
+# their own (libdwarf, avl.c, list.c, mergeq).  -DCTF_NATIVE_COMPAT covers the
+# rest: they are force-included with common/ctf_headers.h by their own
+# makefiles, and -include options are processed in the order given, so the
+# shims have to be pulled in from inside that header to land ahead of it.
+#
+CPPFLAGS +=	-include $(SRC)/tools/ctf/native/native_compat.h
+CPPFLAGS +=	-DCTF_NATIVE_COMPAT
+
+#
+# Ahead of the host's own directories, unlike the -idirafter below: this holds
+# the handful of headers where the host has an opinion and it is the wrong one.
+#
+CPPFLAGS +=	-I$(SRC)/tools/ctf/native
+
+#
+# $(SRC)/uts/common holds both headers illumos does not ship (<sys/ctf.h>,
+# <sys/ctf_api.h>, <sys/list.h>) and headers every libc has (<sys/types.h>).
+# Only the first kind is wanted.  -idirafter searches it *after* the host's own
+# directories, so the host wins wherever it has an opinion and illumos supplies
+# the rest.  This is why Makefile.ctf no longer lists it as a -I.
+#
+CPPFLAGS +=	-idirafter$(SRC)/uts/common
+
+#
+# ...and likewise $(SRC)/head, for the handful of userland headers illumos
+# ships that the host has no equivalent of, <macros.h> among them.
+#
+CPPFLAGS +=	-idirafter$(SRC)/head
+
+#
+# $(INS.file) passes `-f <dir>', which is illumos install(1)'s spelling and not
+# GNU coreutils'.  A foreign host has a coreutils `install' of its own, and
+# which one a bare `install' resolves to depends on how the build environment
+# happens to order its PATH.  Name the unambiguous one.
+#
+INS=		install.bin
+
+BDIRECT=
+BLOCAL=
+BREDUCE=
+ZDEFS=
+ZDIRECT=
+ZIGNORE=
+ZINTERPOSE=
+ZLAZYLOAD=
+ZLOADFLTR=
+ZNOLAZYLOAD=
+ZNOLDYNSYM=
+ZRECORD=
+ZREDLOCSYM=
+ZTEXT=
+ZVERBOSE=
+ZASSERTDEFLIB=
+ZGUIDANCE=
+ZFATALWARNINGS=
+ZASLR=
+LDCHECKS=
+NATIVE_LIBS=
+
+# cw turns $(SAVEARGS) into gcc's -msave-args, which only illumos' gcc has.
+SAVEARGS=
+
+#
+# illumos mapfiles are precisely what a foreign link-editor cannot read.  For
+# a build tool the only thing they buy is symbol scoping, so drop them.
+#
+MAPFILE.NED=
+MAPFILE.PGA=
+MAPFILE.NES=
+MAPFILE.FLT=
+MAPFILE.NGB=
+MAPFILE.INT=
+MAPFILES=
+DYNFLAGS_MAPFILES=
+VERSREF=
+
+#
+# There is no CTF, no mcs and no strip for the CTF tools themselves -- they are
+# what *produces* CTF.  Reduce every post-processing step to a no-op, and to
+# `:' rather than nothing, since the shared makefiles splice these into
+# compound `a ; b' command lines.
+#
+CTFCONVERT_POST=	:
+CTFMERGE_POST=		:
+CTFCONVERT_O=		:
+POST_PROCESS_O=		:
+POST_PROCESS_S_O=	:
+POST_PROCESS_CC_O=	:
+POST_PROCESS_A=		:
+POST_PROCESS_SO=	:
+POST_PROCESS=		:
+PROCESS_CTF=		:
+STRIP_STABS=		:
+
+#
+# These tools live in $(MACH) (i.e. i386) directories, which on illumos means a
+# 32-bit build.  A cross-build host is not required to have a 32-bit libc, so
+# rebind the compilation macros to their 64-bit forms.  Makefile.native has to
+# come after Makefile.master.64 so that the *native* 64-bit flags win; this is
+# the same ordering tools/sgs/ld/Makefile uses.
+#
+include $(SRC)/Makefile.master.64
+include $(SRC)/Makefile.native
+
+#
+# Restated rather than patched up piecemeal: Makefile.lib builds DYNFLAGS out
+# of the macros emptied above, and the leaf makefiles then append illumos ld's
+# `-R' (which GNU ld spells `-rpath').  $$ORIGIN survives because the loader,
+# not the link-editor, expands it.
+#
+DYNFLAGS=	$(HSONAME) -Wl,-rpath,'$$ORIGIN/../../lib/$(MACH)'

@@ -103,9 +103,16 @@ CERRWARN +=	-_gcc=-Wno-implicit-function-declaration
 # libdwarf not clean
 SMATCH=off
 
-DYNFLAGS += '-R$$ORIGIN/../../lib/$(MACH)'
 LDLIBS = -lelf -lc -lz
 NATIVE_LIBS += libelf.so libc.so libz.so
+
+#
+# The `-R' that used to be appended to DYNFLAGS here is restated as GNU ld's
+# -rpath by Makefile.ctf.native, which also empties the illumos-ld-only macros
+# Makefile.lib feeds into DYNFLAGS.  It has to be included after Makefile.lib
+# and Makefile.tools above, both of which pull in Makefile.master.
+#
+include ../../Makefile.ctf.native
 
 .KEEP_STATE:
 .PARALLEL:
