@@ -6277,6 +6277,7 @@ process_actions(scf_handle_t *h, scf_propertygroup_t *pg, scf_instance_t *inst)
 	admin_action_t a;
 	int i, ret = 0, r;
 	hrtime_t action_ts[NACTIONS];
+	int64_t ts;
 	char *inst_name;
 
 	r = libscf_instance_get_fmri(inst, &inst_name);
@@ -6373,8 +6374,15 @@ process_actions(scf_handle_t *h, scf_propertygroup_t *pg, scf_instance_t *inst)
 			}
 		}
 
-		r = scf_value_get_integer(val, &action_ts[i]);
+		/*
+		 * Not read straight into action_ts[i]: that is an hrtime_t,
+		 * which is `long long`, while scf_value_get_integer() takes an
+		 * int64_t, which is `long` in LP64. The two are the same type
+		 * only in ILP32.
+		 */
+		r = scf_value_get_integer(val, &ts);
 		assert(r == 0);
+		action_ts[i] = ts;
 	}
 
 	a = ADMIN_EVENT_MAINT_ON_IMMEDIATE;
