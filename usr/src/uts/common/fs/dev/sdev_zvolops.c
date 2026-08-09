@@ -378,7 +378,7 @@ devzvol_update_zclist_cb(void *arg)
 {
 	zfs_cmd_t	*zc;
 	int		rc;
-	size_t		size;
+	size_t		size = 0;
 
 	zc = kmem_zalloc(sizeof (zfs_cmd_t), KM_SLEEP);
 	mutex_enter(&devzvol_mtx);
@@ -404,9 +404,17 @@ devzvol_update_zclist_cb(void *arg)
 			 * catastrophic error.
 			 *
 			 * Give up memory and exit.
+			 *
+			 * devzvol_handle_ioctl() can fail before it has
+			 * allocated anything -- it returns ENXIO if /dev/zfs
+			 * cannot be opened at all -- in which case zc came
+			 * from kmem_zalloc() and zc_nvlist_dst is still NULL.
+			 * Guard the free the same way the success path above
+			 * guards its own.
 			 */
-			kmem_free((void *)(uintptr_t)zc->zc_nvlist_dst,
-			    size);
+			if (zc->zc_nvlist_dst != 0)
+				kmem_free((void *)(uintptr_t)zc->zc_nvlist_dst,
+				    size);
 			break;
 	}
 
@@ -458,9 +466,17 @@ devzvol_create_pool_dirs(struct vnode *dvp)
 	rc = nvlist_unpack((char *)(uintptr_t)devzvol_zclist,
 	    devzvol_zclist_size, &nv, 0);
 	if (rc) {
-		ASSERT(rc == 0);
-		kmem_free((void *)(uintptr_t)devzvol_zclist,
-		    devzvol_zclist_size);
+		/*
+		 * No assertion here: this arm is reached whenever there is no
+		 * pool list to unpack, which is the normal state of affairs on
+		 * a system with no ZFS at all -- devzvol_update_zclist() will
+		 * have left devzvol_zclist NULL because the ioctl failed. The
+		 * recovery below is correct; asserting rc == 0 inside `if (rc)'
+		 * could only ever fire.
+		 */
+		if (devzvol_zclist != 0)
+			kmem_free((void *)(uintptr_t)devzvol_zclist,
+			    devzvol_zclist_size);
 		devzvol_gen = 0;
 		devzvol_zclist = 0;
 		devzvol_zclist_size = 0;
