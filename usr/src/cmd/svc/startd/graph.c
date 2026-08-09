@@ -145,7 +145,9 @@
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
+#ifdef SMF_HAVE_LIBFMEVENT
 #include <fm/libfmevent.h>
+#endif	/* SMF_HAVE_LIBFMEVENT */
 #include <libscf.h>
 #include <libscf_priv.h>
 #include <librestart.h>
@@ -162,9 +164,9 @@
 #include <sys/statvfs.h>
 #include <sys/uadmin.h>
 #include <zone.h>
-#if defined(__x86)
+#if defined(__x86) && defined(SMF_HAVE_LIBBE)
 #include <libbe.h>
-#endif	/* __x86 */
+#endif	/* __x86 && SMF_HAVE_LIBBE */
 
 #include "startd.h"
 #include "protocol.h"
@@ -3612,7 +3614,7 @@ do_uadmin(void)
 	 * print warning and fall back to regular reboot.
 	 */
 	if (halting == AD_FASTREBOOT) {
-#if defined(__x86)
+#if defined(__x86) && defined(SMF_HAVE_LIBBE)
 		if (be_get_boot_args(&fbarg, BE_ENTRY_DEFAULT) == 0) {
 			mdep = (uintptr_t)fbarg;
 		} else {
@@ -3623,6 +3625,16 @@ do_uadmin(void)
 			uu_warn("Failed to get fast reboot arguments.\n"
 			    "Falling back to regular reboot.\n");
 		}
+#elif defined(__x86)	/* !SMF_HAVE_LIBBE */
+		/*
+		 * Built without libbe, so the default boot environment's boot
+		 * arguments cannot be read. This is the same outcome as
+		 * be_get_boot_args() failing, which the branch above already
+		 * falls back from.
+		 */
+		halting = AD_BOOT;
+		uu_warn("Fast reboot configured, but this svc.startd was "
+		    "built without libbe.\nFalling back to regular reboot.\n");
 #else	/* __x86 */
 		halting = AD_BOOT;
 		uu_warn("Fast reboot configured, but not supported by "
@@ -4651,6 +4663,7 @@ stn_restarter_state(restarter_instance_state_t rstate)
 	return (-1);
 }
 
+#ifdef SMF_HAVE_LIBFMEVENT
 /*
  * State transition counters
  * Not incremented atomically - indicative only
@@ -4663,11 +4676,26 @@ static uint64_t stev_ct_noprefs;
 static uint64_t stev_ct_from_uninit;
 static uint64_t stev_ct_bad_state;
 static uint64_t stev_ct_ovr_prefs;
+#endif	/* SMF_HAVE_LIBFMEVENT */
 
 static void
 dgraph_state_transition_notify(graph_vertex_t *v,
     restarter_instance_state_t old_state, restarter_str_t reason)
 {
+#ifndef SMF_HAVE_LIBFMEVENT
+	/*
+	 * Built without libfmevent. Everything this function does is in
+	 * service of publishing one FMA "state-transition" event; the only
+	 * other effects are the indicative stev_ct_* counters, which nothing
+	 * reads. Publishing already fails softly -- the error path below is a
+	 * log_framework(LOG_DEBUG, ...) and nothing more -- so omitting it is
+	 * the same outcome as a publish that never succeeds.
+	 */
+	(void) v;
+	(void) old_state;
+	(void) reason;
+}
+#else	/* SMF_HAVE_LIBFMEVENT */
 	restarter_instance_state_t new_state = v->gv_state;
 	int stn_transition, maint;
 	int from, to;
@@ -4750,6 +4778,7 @@ dgraph_state_transition_notify(graph_vertex_t *v,
 		nvlist_free(attr);
 	}
 }
+#endif	/* SMF_HAVE_LIBFMEVENT */
 
 /*
  * Find the vertex for inst_name.  If it doesn't exist, return ENOENT.
