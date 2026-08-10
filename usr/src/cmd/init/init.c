@@ -2921,6 +2921,25 @@ write_ioctl_syscon()
 	(void) link(SYSTTY, SYSCON);
 	(void) umask(022);
 	fp = fopen(IOCTLSYSCON, "w");
+	if (fp == NULL) {
+		/*
+		 * Not being able to write this is not fatal: it caches the
+		 * console's termios settings across boots, and init works
+		 * without it. Returning matters a great deal, though --
+		 * every call below would otherwise be made on a NULL FILE,
+		 * and `fprintf(NULL, ...)` is an immediate SIGSEGV. For init
+		 * that is not a crash anybody can see, it is a silent restart
+		 * loop: the kernel restarts init, init faults again, forever.
+		 *
+		 * Reachable on any system whose /etc is not writable when
+		 * init runs -- a read-only root, or one not yet remounted
+		 * read-write.
+		 */
+		console(B_TRUE, "Cannot write %s: %s\n", IOCTLSYSCON,
+		    strerror(errno));
+		(void) umask(cmask);
+		return;
+	}
 
 	(void) fprintf(fp, "%x:%x:%x:%x:0", stored_syscon_termios.c_iflag,
 	    stored_syscon_termios.c_oflag, stored_syscon_termios.c_cflag,
