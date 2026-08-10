@@ -104,8 +104,28 @@ $(RPCSVCDIRS):
 key_prot.h: key_prot.x
 	$(RPCGEN) -C -h key_prot.x > $@
 
+#
+# The trailing declaration blocks rpcgen appends -- the xdr_*() prototypes and
+# the client/server stub prototypes -- name the lowercase typedefs it generated
+# for the definitions in pmap_prot.x.  Those definitions sit inside the
+# `#ifndef _KERNEL` arm of this header (see the %-passthrough at the top of
+# pmap_prot.x), while the appended blocks land after the matching #endif, so a
+# kernel compilation of <rpc/pmap_prot.h> sees prototypes referring to types
+# that were never declared: "unknown type name 'pmap'".
+#
+# illumos' own rpcgen does not hit this, because it emits each xdr_*()
+# prototype immediately after the definition it belongs to -- i.e. inside the
+# guard.  A build using another rpcgen (NetBSD's, when cross-building from a
+# host with no illumos rpcgen) appends them instead.  Guard them here rather
+# than deleting them: this header is installed into /usr/include as well, and
+# userland genuinely uses those prototypes.
+#
+# Only declarations are touched, so the #define PMAPPROG/PMAPVERS/PMAPPROC_*
+# block stays visible to the kernel, which uses it (uts/common/rpc/rpc_subr.c,
+# uts/common/fs/nfs/nfs_dlinet.c).
 pmap_prot.h: pmap_prot.x
 	$(RPCGEN) -M -h pmap_prot.x > $@
+	$(SED) -i -e '/ndef _KERNEL \*\//,$$ s|^\([a-z].*(.*);\)$$|#ifndef _KERNEL\n\1\n#endif|' $@
 
 rpc_sztypes.h: rpc_sztypes.x
 	$(RPCGEN) -C -h rpc_sztypes.x > $@
