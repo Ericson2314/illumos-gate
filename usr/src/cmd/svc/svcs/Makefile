@@ -34,7 +34,12 @@ include ../../Makefile.cmd
 include ../../Makefile.ctf
 
 POFILE =	$(PROG)_all.po
-LDLIBS +=	-lcontract -lscf -luutil -lumem -lnvpair -lzonecfg -lproc
+#
+# -lzonecfg is omitted, and svcs.c's one use of it is compiled out behind
+# HAVE_LIBZONECFG.  Define HAVE_LIBZONECFG and add -lzonecfg back to restore
+# it; see the commit message for why this build does not.
+#
+LDLIBS +=	-lcontract -lscf -luutil -lumem -lnvpair -lproc
 CPPFLAGS += -I ../common
 
 CERRWARN += $(CNOWARN_UNINIT)

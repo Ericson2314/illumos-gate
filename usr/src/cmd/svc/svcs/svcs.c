@@ -79,7 +79,9 @@
 #include <stdlib.h>
 #include <strings.h>
 #include <time.h>
+#ifdef HAVE_LIBZONECFG
 #include <libzonecfg.h>
+#endif
 #include <zone.h>
 
 #ifndef TEXT_DOMAIN
@@ -364,7 +366,10 @@ int
 pg_get_single_val(scf_propertygroup_t *pg, const char *propname, scf_type_t ty,
     void *vp, size_t sz, uint_t flags)
 {
-	char *buf, root[MAXPATHLEN];
+	char *buf;
+#ifdef HAVE_LIBZONECFG
+	char root[MAXPATHLEN];
+#endif
 	size_t buf_sz;
 	int ret = -1, r;
 	boolean_t multi = B_FALSE;
@@ -473,10 +478,12 @@ out:
 	 * As a convenience, we're going to prepend the zone path to the
 	 * name of the log file.
 	 */
+#ifdef HAVE_LIBZONECFG
 	root[0] = '\0';
 	(void) zone_get_rootpath(g_zonename, root, sizeof (root));
 	(void) strlcat(root, vp, sizeof (root));
 	(void) snprintf(vp, sz, "%s", root);
+#endif
 
 	return (ret);
 }
