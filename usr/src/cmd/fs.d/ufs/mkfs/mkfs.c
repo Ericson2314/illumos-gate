@@ -259,7 +259,6 @@
 #include	<sys/dkio.h>
 #include	<sys/asynch.h>
 
-extern offset_t	llseek();
 extern char	*getfullblkname(char *);
 extern long	lrand48();
 
