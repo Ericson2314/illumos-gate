@@ -241,6 +241,7 @@
 #include	<sys/efi_partition.h>
 #include	<fslib.h>
 #include	"roll_log.h"
+#include	"populate.h"
 
 #define	bcopy(f, t, n)    (void) memcpy(t, f, n)
 #define	bzero(s, n)	(void) memset(s, 0, n)
@@ -418,6 +419,12 @@ static void range_check(long *varp, char *name, long minimum,
 static void range_check_64(diskaddr_t *varp, char *name, uint64_t minimum,
     uint64_t maximum, uint64_t def_val, int user_supplied);
 static int fd_is_regular_file(int fd);
+
+/*
+ * -R: the directory tree to copy into the new filesystem, or NULL to leave it
+ * empty as mkfs always has.
+ */
+static char *populate_dir = NULL;
 static daddr32_t alloc(int size, int mode);
 static diskaddr_t get_max_size(int fd);
 static long get_max_track_size(int fd);
@@ -656,7 +663,7 @@ main(int argc, char *argv[])
 #endif
 	(void) textdomain(TEXT_DOMAIN);
 
-	while ((c = getopt(argc, argv, "F:bmo:VPGM:T:t:")) != EOF) {
+	while ((c = getopt(argc, argv, "F:bmo:VPGM:R:T:t:")) != EOF) {
 		switch (c) {
 
 		case 'F':
@@ -769,6 +776,9 @@ main(int argc, char *argv[])
 			/* FALLTHROUGH */
 		case 'G':	/* grow the file system */
 			grow = 1;
+			break;
+		case 'R':	/* populate the new file system from a directory */
+			populate_dir = optarg;
 			break;
 		case 'P':	/* probe the file system growing size	*/
 			Pflag = 1;
@@ -2398,6 +2408,37 @@ grow50:
 		/* we're just cleaning up, so keep going */
 	}
 	fsi = fso = -1;
+
+	/*
+	 * Everything mkfs itself writes is on disk now, so the filesystem is
+	 * complete and consistent. Filling it in is a separate pass over the
+	 * finished image -- see populate.c for why it is not interleaved with
+	 * laying it out.
+	 *
+	 * Reopened read/write because fso was write-only: the populator reads
+	 * back the superblock, the cylinder groups and the inode blocks it
+	 * updates.
+	 */
+	if (populate_dir != NULL) {
+		int pfd = open64(fsys, O_RDWR);
+
+		if (pfd < 0) {
+			saverr = errno;
+			(void) fprintf(stderr, gettext(
+			    "mkfs: cannot reopen %s to populate it: %s\n"),
+			    fsys, strerror(saverr));
+			lockexit(32);
+		}
+		ufs_populate(pfd, populate_dir);
+		if (fsync(pfd) == -1) {
+			saverr = errno;
+			(void) fprintf(stderr, gettext(
+			    "mkfs: fsync failed after populating: %s\n"),
+			    strerror(saverr));
+			lockexit(32);
+		}
+		(void) close(pfd);
+	}
 
 #ifndef STANDALONE
 	lockexit(0);
