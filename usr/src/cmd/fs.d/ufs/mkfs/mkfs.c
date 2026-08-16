@@ -417,6 +417,7 @@ static void range_check(long *varp, char *name, long minimum,
     long maximum, long def_val, int user_supplied);
 static void range_check_64(diskaddr_t *varp, char *name, uint64_t minimum,
     uint64_t maximum, uint64_t def_val, int user_supplied);
+static int fd_is_regular_file(int fd);
 static daddr32_t alloc(int size, int mode);
 static diskaddr_t get_max_size(int fd);
 static long get_max_track_size(int fd);
@@ -1407,7 +1408,16 @@ retry_alternate_logic:
 		}
 	}
 
-	if (!Nflag) {
+	/*
+	 * The checks below exist to stop mkfs writing over a filesystem that
+	 * is currently mounted, and they work by looking the target up as a
+	 * block device in the mount table.  A regular file is never a mounted
+	 * block device, so none of it applies to one -- and MNTTAB itself is
+	 * an illumos mntfs mount, which a build host running some other system
+	 * has no counterpart for.  Skip the interlock in that case; the open
+	 * below still happens either way.
+	 */
+	if (!Nflag && !fd_is_regular_file(fsi)) {
 		/*
 		 * Check if MNTTAB is trustable
 		 */
@@ -1459,8 +1469,21 @@ retry_alternate_logic:
 			    special);
 			lockexit(32);
 		}
+	}
 
-		fso = (grow) ? open64(fsys, O_WRONLY) : creat64(fsys, 0666);
+	if (!Nflag) {
+		/*
+		 * creat(2) truncates.  On a device that is a no-op, but on a
+		 * regular file it throws away the very length that the
+		 * geometry above was derived from, leaving nothing to write
+		 * into.  Open without O_TRUNC in that case.
+		 */
+		if (grow)
+			fso = open64(fsys, O_WRONLY);
+		else if (fd_is_regular_file(fsi))
+			fso = open64(fsys, O_WRONLY | O_CREAT, 0666);
+		else
+			fso = creat64(fsys, 0666);
 		if (fso < 0) {
 			saverr = errno;
 			(void) fprintf(stderr,
@@ -2383,13 +2406,49 @@ grow50:
 	return (0);
 }
 
+/*
+ * Is this descriptor an ordinary file rather than a device?
+ *
+ * Several things mkfs does only make sense against a disk: interrogating a
+ * partition table, consulting the mount table, asking the driver for its
+ * transfer size.  None of them apply when the target is a file, and some of
+ * them fail outright, so it is worth being able to ask.
+ */
+static int
+fd_is_regular_file(int fd)
+{
+	struct stat64 st;
+
+	return (fstat64(fd, &st) == 0 && S_ISREG(st.st_mode));
+}
+
+/*
+ * A regular file has no media to interrogate, so DKIOCGMEDIAINFO fails on
+ * one.  Its size is simply how long it is, which makes it possible to build
+ * a filesystem image in a file rather than only on a disk -- the same thing
+ * newfs(8) on the BSDs will do, and what a build system wants.
+ *
+ * Anything else that is not a disk keeps the historical answer of 0, which
+ * the caller reports as "cannot determine partition size".
+ */
+static diskaddr_t
+get_regular_file_size(int fd)
+{
+	struct stat64 st;
+
+	if (!fd_is_regular_file(fd) || fstat64(fd, &st) == -1)
+		return (0);
+
+	return ((diskaddr_t)(st.st_size / DEV_BSIZE));
+}
+
 static diskaddr_t
 get_device_size(int fd)
 {
 	struct dk_minfo	disk_info;
 
 	if ((ioctl(fd, DKIOCGMEDIAINFO, (caddr_t)&disk_info)) == -1)
-		return (0);
+		return (get_regular_file_size(fd));
 
 	return (disk_info.dki_capacity);
 }
