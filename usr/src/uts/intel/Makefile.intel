@@ -411,6 +411,9 @@ DRV_KMODS	+= vioif
 DRV_KMODS	+= viorand
 DRV_KMODS	+= vioscsi
 
+# Virtio FS transport driver, for the "virtiofs" file system
+DRV_KMODS	+= vtfs
+
 # Virtio 9P transport driver
 DRV_KMODS	+= vio9p
 
@@ -531,6 +534,7 @@ FS_KMODS	+= autofs ctfs dcfs dev devfs fdfs fifofs hsfs lofs
 FS_KMODS	+= mntfs namefs nfs objfs zfs zut
 FS_KMODS	+= pcfs procfs sockfs specfs tmpfs udfs ufs sharefs
 FS_KMODS	+= smbfs bootfs
+FS_KMODS	+= virtiofs
 
 #
 #	Streams Modules (/kernel/strmod):

@@ -1095,6 +1095,8 @@ FIFO_OBJS +=	fifosubr.o	fifovnops.o
 
 PIPE_OBJS +=	pipe.o
 
+VIRTIOFS_OBJS +=	virtiofs_vfsops.o	virtiofs_vnops.o	virtiofs_subr.o
+
 HSFS_OBJS +=	hsfs_node.o	hsfs_subr.o	hsfs_vfsops.o	hsfs_vnops.o \
 		hsfs_susp.o	hsfs_rrip.o	hsfs_susp_subr.o
 
@@ -2130,6 +2132,9 @@ VIRTIO_OBJS = virtio_main.o virtio_legacy.o virtio_modern.o virtio_dma.o
 
 # Virtio block driver
 VIOBLK_OBJS = vioblk.o
+
+# Virtio FS transport driver
+VTFS_OBJS = vtfs.o
 
 # Virtio network driver
 VIOIF_OBJS = vioif.o
