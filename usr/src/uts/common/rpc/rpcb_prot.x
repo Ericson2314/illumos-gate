@@ -424,6 +424,7 @@ program RPCBPROG {
 %	char *r_owner;			/* owner of the mapping */
 %};
 %typedef struct rpcb RPCB;
+%typedef struct rpcb rpcb;
 %
 %/*
 % * A list of mappings
@@ -433,6 +434,7 @@ program RPCBPROG {
 %	struct rpcblist *rpcb_next;
 %};
 %typedef struct rpcblist RPCBLIST;
+%typedef struct rpcblist rp__list;
 %typedef struct rpcblist *rpcblist_ptr;
 %
 %/*
