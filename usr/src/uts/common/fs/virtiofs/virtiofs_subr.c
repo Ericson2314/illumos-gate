@@ -118,7 +118,17 @@ virtiofs_call(vfsmnt_t *vfs, uint32_t opcode, uint64_t nodeid,
 	char *obuf, *ibuf;
 	size_t obuflen = sizeof (*ihdr) + inbodylen;
 	size_t ibuflen;
-	boolean_t noreply = (outbodylen == 0 && data == NULL);
+	/*
+	 * FUSE_FORGET is the only request we send that the server does not
+	 * answer at all.  Every other opcode is answered with at least a
+	 * fuse_out_header even when it has no out-args of its own --
+	 * FUSE_RELEASE and FUSE_RELEASEDIR are the ones we send -- so a
+	 * device-writable buffer has to be supplied for it.  Leaving one out
+	 * does not merely lose the reply: the server has nowhere at all to
+	 * write, which it treats as a fatal encoding failure and drops the
+	 * connection.
+	 */
+	boolean_t noreply = (opcode == FUSE_FORGET);
 	size_t got;
 	int r;
 
