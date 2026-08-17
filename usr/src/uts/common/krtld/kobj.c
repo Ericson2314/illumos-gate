@@ -2571,6 +2571,19 @@ get_syms(struct module *mp, struct _buf *file)
 			if (shp->sh_addr)
 				continue;
 
+			/*
+			 * An empty relocation section has nothing to read
+			 * and nothing for do_relocations() to apply, and
+			 * kobj_alloc() of zero bytes is a deprecated
+			 * kmem_alloc(9F) that a DEBUG kernel warns about
+			 * once per call.  Such sections are common in
+			 * objects whose DWARF has been emptied rather than
+			 * removed, since that leaves the matching
+			 * ".rela.debug_*" section present but zero length.
+			 */
+			if (shp->sh_size == 0)
+				continue;
+
 			/* KM_TMP since kobj_free'd in do_relocations */
 			shp->sh_addr = (Addr)
 			    kobj_alloc(shp->sh_size, KM_WAIT|KM_TMP);
