@@ -30,10 +30,28 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 #include <sys/socket.h>
 #include <sys/socketvar.h>
 #include <sys/stat.h>
 #include <unistd.h>
+
+/*
+ * The sockconfig(2) system call has no prototype in any installed header, so
+ * every call below was relying on an implicit declaration. That is invalid C
+ * since C99, and compilers that enforce it reject this file outright:
+ *
+ *     error: implicit declaration of function '_sockconfig'
+ *
+ * It is declared variadic because that is what it actually is. libc supplies
+ * it as a generated assembly system-call stub (`_sockconfig.o` in SYSOBJS),
+ * which is untyped, and the number of arguments genuinely varies by command:
+ * SOCKCONFIG_GET_SOCKTABLE passes one, SOCKCONFIG_ADD_SOCK passes four. The
+ * kernel declares the trailing arguments `void *` and interprets them per
+ * command (uts/common/os/sysent.c), which is why the call sites pass a
+ * mixture of small integers and pointers through them.
+ */
+extern int _sockconfig(int, ...);
 
 #define	MAXLINELEN	4096
 
@@ -86,9 +104,7 @@ static int	parse_filter_params(int argc, char **argv);
 static int	print_socktable();
 
 int
-main(argc, argv)
-	int argc;
-	char *argv[];
+main(int argc, char *argv[])
 {
 	int ret;
 
@@ -372,7 +388,8 @@ parse_params(char *famstr, char *typestr, char *protostr, char *path,
 	printf("not calling sockconfig(%d, %d, %d, %d, %s)\n",
 	    cmd, fam, type, protocol, path == NULL ? "(null)" : path);
 #else
-	if (_sockconfig(cmd, fam, type, protocol, path) == -1) {
+	if (_sockconfig(cmd, (void *)(uintptr_t)fam, (void *)(uintptr_t)type,
+	    (void *)(uintptr_t)protocol, path) == -1) {
 		char *s;
 
 		switch (errno) {
