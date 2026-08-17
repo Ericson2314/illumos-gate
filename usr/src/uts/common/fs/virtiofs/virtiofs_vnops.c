@@ -933,7 +933,25 @@ virtiofs_map(vnode_t *vp, offset_t off, struct as *as, caddr_t *addrp,
 	vn_a.offset = (u_offset_t)off;
 	vn_a.type = flags & MAP_TYPE;
 	vn_a.prot = prot;
-	vn_a.maxprot = maxprot & ~PROT_WRITE;
+
+	/*
+	 * maxprot is the ceiling that a later mprotect(2) is measured against,
+	 * not a statement about this mapping.  A private mapping is entitled
+	 * to become writable -- that is what copy on write is for, and nothing
+	 * a private mapping does to its own pages can ever reach the server --
+	 * so withholding PROT_WRITE from it only makes a legal mprotect(2)
+	 * fail with EACCES.  ld.so.1 does exactly that mprotect() when it has
+	 * text relocations to apply.  hsfs, which this file otherwise follows,
+	 * passes maxprot through untouched.
+	 *
+	 * A shared mapping is the case actually worth defending against: it is
+	 * refused above when it asks for PROT_WRITE outright, and clearing the
+	 * bit here is what stops it from asking again later.
+	 */
+	if (flags & MAP_SHARED)
+		vn_a.maxprot = maxprot & ~PROT_WRITE;
+	else
+		vn_a.maxprot = maxprot;
 	vn_a.flags = flags & ~MAP_TYPE;
 	vn_a.cred = cr;
 	vn_a.amp = NULL;
