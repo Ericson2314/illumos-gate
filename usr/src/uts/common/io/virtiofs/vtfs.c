@@ -347,7 +347,7 @@ vtfs_xfer(vtfs_t *vtf, vtfs_xfer_t *vx)
 
 	if (vx->vx_data != NULL && vx->vx_datalen > 0) {
 		if (virtio_dma_bind(vs->vs_data, vx->vx_data, vx->vx_datalen,
-		    DDI_DMA_WRITE | DDI_DMA_STREAMING, KM_SLEEP) !=
+		    DDI_DMA_READ | DDI_DMA_STREAMING, KM_SLEEP) !=
 		    DDI_SUCCESS) {
 			r = ENOMEM;
 			goto out;
