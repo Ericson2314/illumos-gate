@@ -464,10 +464,30 @@ virtiofs_readdir(vnode_t *vp, struct uio *uiop, cred_t *cr, int *eofp,
 		nd->d_ino = (ino64_t)fd->ino;
 		nd->d_off = (offset_t)fd->off;
 		nd->d_reclen = (ushort_t)ndlen;
-		/* strncpy(9F) zeroes the bytes past the name for us. */
-		(void) strncpy(nd->d_name, fd->name,
-		    DIRENT64_NAMELEN(ndlen));
-		nd->d_name[fd->namelen] = '\0';
+
+		/*
+		 * bcopy() of exactly namelen bytes, then terminate and zero the
+		 * padding by hand.  NOT strncpy(): it stops at a NUL in the
+		 * *source*, and a fuse_dirent name is not NUL terminated -- it
+		 * is exactly namelen bytes followed by alignment padding.  Since
+		 * DIRENT64_NAMELEN() is the padded *destination* length, and is
+		 * therefore larger, strncpy() reads past the name looking for a
+		 * terminator that is not there.
+		 *
+		 * For the last record in the reply buffer that runs off the end
+		 * of the allocation, which panics the kernel:
+		 *
+		 *     BAD TRAP: type=e (#pf Page fault) addr=fffffe091ff42000
+		 *     coreutils: #pf Page fault
+		 *     Bad kernel fault at addr=0xfffffe091ff42000
+		 *
+		 * with the fault address exactly at the page after the buffer.
+		 * Every earlier record survives only because whatever follows it
+		 * happens to contain a zero byte.
+		 */
+		bcopy(fd->name, nd->d_name, fd->namelen);
+		bzero(nd->d_name + fd->namelen,
+		    DIRENT64_NAMELEN(ndlen) - fd->namelen);
 
 		outoff += ndlen;
 		cookie = fd->off;
