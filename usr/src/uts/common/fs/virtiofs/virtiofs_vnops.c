@@ -405,7 +405,18 @@ virtiofs_readdir(vnode_t *vp, struct uio *uiop, cred_t *cr, int *eofp,
 	if (eofp != NULL)
 		*eofp = 0;
 
-	if ((error = virtiofs_openfh(vfn, B_TRUE, &fh)) != 0)
+	/*
+	 * A handle of our own, rather than the counted one that
+	 * virtiofs_openfh() shares between every opener of a node.  A FUSE
+	 * offset is a cookie into the stream that a particular handle is
+	 * reading, and means nothing to any other handle: two concurrent
+	 * VOP_READDIRs on one directory that took turns issuing FUSE_READDIR
+	 * against a shared handle would each be resuming from the other's
+	 * position.  This is also what the comment in virtiofs_open() says
+	 * already happens.
+	 */
+	if ((error = virtiofs_fuse_open(vfs, vfn->vfn_nodeid, B_TRUE,
+	    &fh)) != 0)
 		return (error);
 
 	cookie = (u_offset_t)uiop->uio_loffset;
@@ -518,7 +529,7 @@ done:
 		kmem_free(fbuf, VIRTIOFS_DIRBUFSZ);
 	if (obuf != NULL)
 		kmem_free(obuf, obufsize);
-	virtiofs_closefh(vfn, B_TRUE);
+	(void) virtiofs_fuse_release(vfs, vfn->vfn_nodeid, fh, B_TRUE);
 
 	return (error);
 }
