@@ -77,8 +77,16 @@ NATIVE_LIBS += libc.so
 #
 COMPAT_DIR=		$(SRC)/tools/libcompat/common
 COMPAT_INC=		$(SRC)/tools/libcompat/include
-COMPAT_CPPFLAGS=	-I$(COMPAT_DIR) -I$(COMPAT_INC) \
-			-include $(COMPAT_DIR)/native_compat.h
+COMPAT_CPPFLAGS=	-I$(COMPAT_DIR) -include $(COMPAT_DIR)/native_compat.h
+
+#
+# The gathered illumos headers, kept separate from $(COMPAT_CPPFLAGS) because
+# not every consumer wants them.  The link-editor does: it works in illumos'
+# ELF types throughout.  The CTF tools do not: they link the *host* libelf, so
+# putting illumos' <libelf.h> on their include path gives them declarations in
+# types their <elf.h> never defines.
+#
+COMPAT_INC_CPPFLAGS=	-I$(COMPAT_INC)
 COMPAT_SUPPORT_SRC=	$(COMPAT_DIR)/native_support.c
 
 #
