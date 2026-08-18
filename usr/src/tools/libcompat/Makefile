@@ -186,8 +186,10 @@ $(LIBRARY): $(OBJS)
 ROOTONBLDINC=		$(ROOTONBLD)/include
 ROOTONBLDINCNATIVE=	$(ROOTONBLD)/include-native
 ROOTONBLDINCHOSTELF=	$(ROOTONBLD)/include-host-elf
+ROOTONBLDINCOVERLAY=	$(ROOTONBLD)/include-overlay
+ROOTONBLDCOMPATSRC=	$(ROOTONBLD)/src/libcompat
 
-install: all $(ROOTONBLDLIBMACH)/$(LIBRARY) install_hdrs
+install: all $(ROOTONBLDLIBMACH)/$(LIBRARY) install_hdrs install_compat_src
 
 install_hdrs: $(HDRS)
 	$(MKDIR) -p $(ROOTONBLDINC)/sys $(ROOTONBLDINCNATIVE)/sys
@@ -197,6 +199,39 @@ install_hdrs: $(HDRS)
 	$(CP) common/sys/*.h $(ROOTONBLDINCNATIVE)/sys/
 	$(MKDIR) -p $(ROOTONBLDINCHOSTELF)/sys
 	$(CP) host-elf/sys/*.h $(ROOTONBLDINCHOSTELF)/sys/
+
+#
+# The "overlay" profile, and the third of the three that must stay apart.
+# include/ is the gathered illumos headers, include-native/ the shims that
+# stand in for illumos libc headers the host has no counterpart for, and
+# include-host-elf/ the single header that forwards to the host's ELF types.
+# This one is the opposite of include/: it does not stand in for a gate header
+# but sits *in front of* one, with each file #include_next'ing the gate's own
+# and then repointing the one declaration that cannot survive meeting a
+# foreign libc -- the stdio stream names, and the calls whose struct layouts
+# differ.  It is therefore only meaningful for a consumer that has the gate's
+# whole header tree on its include path, which is exactly the consumer that
+# must NOT have include/ or include-native/ on it.
+#
+	$(MKDIR) -p $(ROOTONBLDINCOVERLAY)/sys $(ROOTONBLDINCOVERLAY)/iso
+	$(CP) overlay/*.h $(ROOTONBLDINCOVERLAY)/
+	$(CP) overlay/sys/*.h $(ROOTONBLDINCOVERLAY)/sys/
+	$(CP) overlay/iso/*.h $(ROOTONBLDINCOVERLAY)/iso/
+
+#
+# compat_host.c and compat_gate.c are installed as source rather than compiled
+# into $(LIBRARY), and that is deliberate.  They are the two halves of one
+# shim -- see common/compat_priv.h for the interface between them -- and each
+# half only means anything compiled against a different set of headers:
+# compat_host.c against the host libc's, compat_gate.c against the gate's own
+# with the overlay above prepended.  Those are the consumer's -I flags and its
+# feature-test macros, and there is no single such view to pick here.  So a
+# consumer compiles them alongside its own translation units.
+#
+install_compat_src:
+	$(MKDIR) -p $(ROOTONBLDCOMPATSRC)
+	$(CP) common/compat_host.c common/compat_gate.c common/compat_priv.h \
+	    $(ROOTONBLDCOMPATSRC)/
 
 $(ROOTONBLDLIBMACH):
 	$(MKDIR) -p $@
