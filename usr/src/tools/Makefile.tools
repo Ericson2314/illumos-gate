@@ -76,7 +76,9 @@ NATIVE_LIBS += libc.so
 # into whichever library the consumer already links.
 #
 COMPAT_DIR=		$(SRC)/tools/libcompat/common
-COMPAT_CPPFLAGS=	-I$(COMPAT_DIR) -include $(COMPAT_DIR)/native_compat.h
+COMPAT_INC=		$(SRC)/tools/libcompat/include
+COMPAT_CPPFLAGS=	-I$(COMPAT_DIR) -I$(COMPAT_INC) \
+			-include $(COMPAT_DIR)/native_compat.h
 COMPAT_SUPPORT_SRC=	$(COMPAT_DIR)/native_support.c
 
 # To work around a bootstrapping problem, we can't rely on cw(1) knowing how

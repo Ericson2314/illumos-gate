@@ -13,7 +13,7 @@
 
 CPPFLAGS =	-I. -I$(SRCDIR) -I$(SRCDIR)/common \
 	-I$(SGSHOME)/include -I$(SGSHOME)/include/$(MACH) \
-	-I../include $(CPPFLAGS.native) -I$(ELFCAP) -DNATIVE_BUILD \
+	$(CPPFLAGS.native) -I$(ELFCAP) -DNATIVE_BUILD \
 	$(COMPAT_CPPFLAGS)
 
 #

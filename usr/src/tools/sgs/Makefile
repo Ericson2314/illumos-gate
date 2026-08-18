@@ -12,7 +12,6 @@
 # Copyright 2019, Richard Lowe.
 
 SUBDIRS =		\
-	include		\
 	ld		\
 	libconv		\
 	libelf		\
