@@ -42,7 +42,16 @@ all install clean clobber: $(SUBDIRS)
 # matters because libconv and friends run the sgsmsg built here, and find it
 # under $(ONBLD_TOOLS)/bin/$(MACH).
 #
+# COMPAT_DIR and COMPAT_SUPPORT_SRC (both set by Makefile.tools) are forwarded
+# for the same reason, and it is not hypothetical: Makefile.com puts
+# $(COMPAT_CPPFLAGS) in every sub-directory's CPPFLAGS, and libconv compiles
+# $(COMPAT_SUPPORT_SRC) into native_support.o.  Both name $(SRC)/tools/libcompat
+# by default, so a build that supplies libcompat from somewhere else -- already
+# built, rather than compiled again here -- has to be able to say so on this
+# make's command line and have it reach the sub-makes.
+#
 $(SUBDIRS): FRC
-	@cd $@; pwd; $(MAKE) $(TARGET) $(ROOTONBLD:%=ROOTONBLD=%) $(ONBLD_TOOLS:%=ONBLD_TOOLS=%)
+	@cd $@; pwd; $(MAKE) $(TARGET) $(ROOTONBLD:%=ROOTONBLD=%) $(ONBLD_TOOLS:%=ONBLD_TOOLS=%) \
+	    $(COMPAT_DIR:%=COMPAT_DIR=%) $(COMPAT_SUPPORT_SRC:%=COMPAT_SUPPORT_SRC=%)
 
 FRC:
