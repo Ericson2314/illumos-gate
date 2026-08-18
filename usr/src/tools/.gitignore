@@ -22,7 +22,8 @@ __pycache__
 sgs/include/sys
 sgs/*/*.[chs]
 !sgs/sgsmsg/sgsmsg.c
-!sgs/native/*.[chs]
+!libcompat/common/*.[chs]
+!libcompat/common/sys/*.h
 
 svc/libsqlite/*.[ch]
 svc/svccfg/svccfg_grammar.[ch]

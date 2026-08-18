@@ -62,8 +62,8 @@ OBJECTS =	$(CONV_COMOBJS) $(COMOBJS32) $(COMOBJS64) $(ELFCAP_OBJS) \
 
 CPPFLAGS +=	-DLINK_VER_STRING='"$(RELEASE) (illumos, native)"'
 
-pics/native_support.o:	$(SRC)/tools/sgs/native/native_support.c
-		$(COMPILE.c) $(C_PICFLAGS) -o $@ $(SRC)/tools/sgs/native/native_support.c
+pics/native_support.o:	$(COMPAT_SUPPORT_SRC)
+		$(COMPILE.c) $(C_PICFLAGS) -o $@ $(COMPAT_SUPPORT_SRC)
 		$(POST_PROCESS_O)
 
 pics/assfail.o:		$(SGSCOMMON)/assfail.c

@@ -21,8 +21,8 @@
  * $PLATFORM in runpaths, and building the isalist.
  */
 
-#ifndef	_SGS_NATIVE_SYS_SYSTEMINFO_H
-#define	_SGS_NATIVE_SYS_SYSTEMINFO_H
+#ifndef	_ONBLD_COMPAT_SYS_SYSTEMINFO_H
+#define	_ONBLD_COMPAT_SYS_SYSTEMINFO_H
 
 #include <string.h>
 #include <sys/utsname.h>
@@ -102,4 +102,4 @@ sysinfo(int command, char *buf, long count)
 }
 #endif
 
-#endif	/* _SGS_NATIVE_SYS_SYSTEMINFO_H */
+#endif	/* _ONBLD_COMPAT_SYS_SYSTEMINFO_H */

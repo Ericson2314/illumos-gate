@@ -16,8 +16,8 @@
  * results the runtime linker reports.
  */
 
-#ifndef	_SGS_NATIVE_SYS_MMAN_H
-#define	_SGS_NATIVE_SYS_MMAN_H
+#ifndef	_ONBLD_COMPAT_SYS_MMAN_H
+#define	_ONBLD_COMPAT_SYS_MMAN_H
 
 #include_next <sys/mman.h>
 
@@ -51,4 +51,4 @@ typedef struct mmapobj_result {
 }
 #endif
 
-#endif	/* _SGS_NATIVE_SYS_MMAN_H */
+#endif	/* _ONBLD_COMPAT_SYS_MMAN_H */

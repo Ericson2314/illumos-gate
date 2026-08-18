@@ -23,9 +23,9 @@
  * chain that collides head-on with the host libc.
  */
 
-#ifndef	_CTF_NATIVE_SYS_ELF_H
-#define	_CTF_NATIVE_SYS_ELF_H
+#ifndef	_ONBLD_COMPAT_SYS_ELF_H
+#define	_ONBLD_COMPAT_SYS_ELF_H
 
 #include <elf.h>
 
-#endif	/* _CTF_NATIVE_SYS_ELF_H */
+#endif	/* _ONBLD_COMPAT_SYS_ELF_H */

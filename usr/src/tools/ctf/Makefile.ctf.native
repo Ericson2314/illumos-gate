@@ -24,20 +24,19 @@
 #
 
 #
+# $(COMPAT_CPPFLAGS) is both halves of libcompat's header profile: the
+# force-include, and a -I that lands ahead of the host's own directories --
+# unlike the -idirafter below.  That ordering is deliberate: libcompat holds
+# the handful of headers where the host has an opinion and it is the wrong one.
+#
 # The force-include covers the translation units that reach illumos headers on
 # their own (libdwarf, avl.c, list.c, mergeq).  -DCTF_NATIVE_COMPAT covers the
 # rest: they are force-included with common/ctf_headers.h by their own
 # makefiles, and -include options are processed in the order given, so the
 # shims have to be pulled in from inside that header to land ahead of it.
 #
-CPPFLAGS +=	-include $(SRC)/tools/ctf/native/native_compat.h
+CPPFLAGS +=	$(COMPAT_CPPFLAGS)
 CPPFLAGS +=	-DCTF_NATIVE_COMPAT
-
-#
-# Ahead of the host's own directories, unlike the -idirafter below: this holds
-# the handful of headers where the host has an opinion and it is the wrong one.
-#
-CPPFLAGS +=	-I$(SRC)/tools/ctf/native
 
 #
 # $(SRC)/uts/common holds both headers illumos does not ship (<sys/ctf.h>,

@@ -41,8 +41,8 @@ OBJECTS +=	avl.o
 LDLIBS += -lc -lelf -L$(ROOTONBLDLIBMACH) -ldwarf
 NATIVE_LIBS += libelf.so libc.so
 
-pics/native_support.o:	$(SRC)/tools/ctf/native/native_support.c
-	$(COMPILE.c) $(C_PICFLAGS) -o $@ $(SRC)/tools/ctf/native/native_support.c
+pics/native_support.o:	$(COMPAT_SUPPORT_SRC)
+	$(COMPILE.c) $(C_PICFLAGS) -o $@ $(COMPAT_SUPPORT_SRC)
 	$(POST_PROCESS_O)
 
 pics/avl.o:	$(SRC)/common/avl/avl.c

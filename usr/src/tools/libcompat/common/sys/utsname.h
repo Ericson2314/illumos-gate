@@ -10,22 +10,21 @@
  */
 
 /*
- * A stand-in for illumos' <sys/cmn_err.h> for the native build.  common/avl
- * includes it solely for panic(); the rest of that header is kernel console
- * plumbing that has no meaning here.
+ * The host's <sys/utsname.h> plus SYS_NMLN, which is how illumos spells the
+ * size of a struct utsname field.
  */
 
-#ifndef	_SGS_NATIVE_SYS_CMN_ERR_H
-#define	_SGS_NATIVE_SYS_CMN_ERR_H
+#ifndef	_ONBLD_COMPAT_SYS_UTSNAME_H
+#define	_ONBLD_COMPAT_SYS_UTSNAME_H
 
-#ifdef	__cplusplus
-extern "C" {
+#include_next <sys/utsname.h>
+
+#ifndef	SYS_NMLN
+#ifdef	_UTSNAME_LENGTH
+#define	SYS_NMLN	_UTSNAME_LENGTH
+#else
+#define	SYS_NMLN	257
+#endif
 #endif
 
-extern void panic(const char *, ...) __attribute__((__noreturn__));
-
-#ifdef	__cplusplus
-}
-#endif
-
-#endif	/* _SGS_NATIVE_SYS_CMN_ERR_H */
+#endif	/* _ONBLD_COMPAT_SYS_UTSNAME_H */

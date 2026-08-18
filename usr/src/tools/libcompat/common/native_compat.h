@@ -10,20 +10,35 @@
  */
 
 /*
- * Compatibility shims for building the native link-editor on a host whose
- * libc is not illumos'.  Force-included (via -include) from
- * tools/sgs/Makefile.com, so it must be safe to include first, before
- * anything else.
+ * Compatibility shims for building gate source on a host whose libc is not
+ * illumos.  Force-included (via -include) by every consumer, so it must be
+ * safe to include first, before anything else.
  *
- * The headers staged by tools/sgs/include are illumos' own, and they expect
- * illumos' <sys/types.h> to have already supplied the "_t" spellings of the
- * base integer types and boolean_t.  A foreign libc supplies none of that,
- * so define it here.  Nothing in here is illumos-specific behaviour; it is
- * purely the vocabulary the staged headers assume.
+ * This is the merge of what used to be tools/ctf/native/native_compat.h and
+ * tools/sgs/native/native_compat.h.  Those were two spellings of one job --
+ * "gate source, foreign libc" -- kept apart only because each grew next to
+ * the tool that first needed it.  Neither is specific to the CTF tools or to
+ * the link-editor, and a third consumer would have had to pick one or copy a
+ * third.
+ *
+ * The gate headers a foreign host reaches expect illumos' <sys/types.h> to
+ * have already supplied the "_t" spellings of the base integer types and
+ * boolean_t; a foreign libc supplies none of that, so define it here.
+ * Nothing in here is illumos-specific behaviour.  It is purely the vocabulary
+ * the gate headers assume.
  */
 
-#ifndef	_SGS_NATIVE_COMPAT_H
-#define	_SGS_NATIVE_COMPAT_H
+#ifndef	_ONBLD_COMPAT_H
+#define	_ONBLD_COMPAT_H
+
+/*
+ * <sys/ctf_api.h> uses off64_t, which glibc only declares under this feature
+ * test macro.  It has to be defined before any libc header is included, which
+ * is why this file is force-included first.
+ */
+#ifndef	_LARGEFILE64_SOURCE
+#define	_LARGEFILE64_SOURCE
+#endif
 
 
 /*
@@ -161,8 +176,32 @@ typedef long long		hrtime_t;
 #define	NL_TEXTMAX	2048
 #endif
 
+
+/*
+ * illumos' <sys/sysmacros.h> carries ARRAY_SIZE, but that header is
+ * kernel-flavoured and the rest of it collides with the host's.
+ * common/ctf/ctf_types.c reaches it through <sys/debug.h> on illumos and
+ * finds nothing here.
+ */
+#ifndef	ARRAY_SIZE
+#define	ARRAY_SIZE(x)	(sizeof (x) / sizeof (x[0]))
+#endif
+
+/*
+ * From illumos' <sys/cdefs.h>.  Used by common/lz4, which vtfontcvt links in.
+ */
+#ifndef	__DECONST
+#define	__DECONST(type, var)	((type)(uintptr_t)(const void *)(var))
+#endif
+
+/*
+ * strtonum(3C) is illumos libc, not the host's; native_support.c below
+ * supplies the implementation and this is its declaration.  Not reached
+ * through the gate's <stdlib.h>, which a foreign host does not see.
+ */
+extern long long strtonum(const char *, long long, long long, const char **);
 #ifdef	__cplusplus
 }
 #endif
 
-#endif	/* _SGS_NATIVE_COMPAT_H */
+#endif	/* _ONBLD_COMPAT_H */

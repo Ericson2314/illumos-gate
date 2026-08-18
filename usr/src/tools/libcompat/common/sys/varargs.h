@@ -10,21 +10,13 @@
  */
 
 /*
- * The host's <sys/utsname.h> plus SYS_NMLN, which is how illumos spells the
- * size of a struct utsname field.
+ * illumos' <sys/varargs.h> is, for a userland ISO C compilation, exactly
+ * <stdarg.h>.  The host has no such header, so redirect.
  */
 
-#ifndef	_SGS_NATIVE_SYS_UTSNAME_H
-#define	_SGS_NATIVE_SYS_UTSNAME_H
+#ifndef	_ONBLD_COMPAT_SYS_VARARGS_H
+#define	_ONBLD_COMPAT_SYS_VARARGS_H
 
-#include_next <sys/utsname.h>
+#include <stdarg.h>
 
-#ifndef	SYS_NMLN
-#ifdef	_UTSNAME_LENGTH
-#define	SYS_NMLN	_UTSNAME_LENGTH
-#else
-#define	SYS_NMLN	257
-#endif
-#endif
-
-#endif	/* _SGS_NATIVE_SYS_UTSNAME_H */
+#endif	/* _ONBLD_COMPAT_SYS_VARARGS_H */

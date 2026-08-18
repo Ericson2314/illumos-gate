@@ -14,7 +14,7 @@
 CPPFLAGS =	-I. -I$(SRCDIR) -I$(SRCDIR)/common \
 	-I$(SGSHOME)/include -I$(SGSHOME)/include/$(MACH) \
 	-I../include $(CPPFLAGS.native) -I$(ELFCAP) -DNATIVE_BUILD \
-	-I$(SRC)/tools/sgs/native -include $(SRC)/tools/sgs/native/native_compat.h
+	$(COMPAT_CPPFLAGS)
 
 #
 # The host link-editor is not illumos' -- it understands neither illumos ld's
