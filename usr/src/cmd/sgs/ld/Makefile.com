@@ -51,8 +51,15 @@ LDFLAGS +=	$(VERSREF) $(MAPOPTS) $(RPATH)
 #
 UMEMLIB =	-lumem
 
+#
+# Empty for an illumos-hosted build, where libc supplies assfail3() and the
+# link-editor's version string comes from libconv's vernote.o. A foreign-libc
+# build has neither and links libcompat for them.
+#
+COMPATLIB =
+
 LDLIBS +=	$(UMEMLIB) $(LDLIBDIR64) -lld $(ELFLIBDIR64) -lelf \
-		    $(LDDBGLIBDIR64) -llddbg $(CONVLIBDIR64) -lconv
+		    $(LDDBGLIBDIR64) -llddbg $(CONVLIBDIR64) -lconv $(COMPATLIB)
 
 CERRWARN +=	-_gcc=-Wno-switch
 CERRWARN +=	-_gcc=-Wno-parentheses
