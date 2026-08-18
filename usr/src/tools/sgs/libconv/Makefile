@@ -50,21 +50,19 @@ CONV_BLTOBJS_1 =	$(BLTOBJS:corenote_msg.o=)
 CONV_BLTOBJS =		$(CONV_BLTOBJS_1:lddstub_msg.o=)
 
 #
-# ...and add back, from ../native, the few definitions the dropped objects
-# and a foreign libc leave undefined: link_ver_string (normally vernote.o),
-# assfail3() and panic() (normally libc), and assfail() (cmd/sgs/common).
+# ...and add back the few definitions the dropped objects leave undefined.
+# assfail() is cmd/sgs/common's and is compiled here.  The rest --
+# link_ver_string (normally vernote.o), assfail3() and panic() (normally libc)
+# -- come from libcompat.a, which ld links; there is no reason for every
+# consumer of this archive to compile that source again.
 #
-NATIVE_OBJS =	native_support.o assfail.o
+NATIVE_OBJS =	assfail.o
 
 ASOBJS =
 OBJECTS =	$(CONV_COMOBJS) $(COMOBJS32) $(COMOBJS64) $(ELFCAP_OBJS) \
 		$(CONV_BLTOBJS) $(NATIVE_OBJS)
 
 CPPFLAGS +=	-DLINK_VER_STRING='"$(RELEASE) (illumos, native)"'
-
-pics/native_support.o:	$(COMPAT_SUPPORT_SRC)
-		$(COMPILE.c) $(C_PICFLAGS) -o $@ $(COMPAT_SUPPORT_SRC)
-		$(POST_PROCESS_O)
 
 pics/assfail.o:		$(SGSCOMMON)/assfail.c
 		$(COMPILE.c) $(C_PICFLAGS) -o $@ $(SGSCOMMON)/assfail.c

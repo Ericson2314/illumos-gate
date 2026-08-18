@@ -30,7 +30,8 @@ include		../Makefile.com
 # -lumem is dropped: nothing under cmd/sgs calls a umem_* interface, it is
 # linked purely as a faster malloc, and libumem is illumos'.
 #
-LDLIBS =	-L../libconv -L$(ROOTONBLDLIBMACH64) -lld -lelf -lconv
+LDLIBS =	-L../libconv -L$(ROOTONBLDLIBMACH64) -lld -lelf -lconv \
+		-L$(ROOTONBLDLIBMACH) -lcompat
 NATIVE_LIBS +=	libc.so
 
 #
