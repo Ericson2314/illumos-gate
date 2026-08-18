@@ -73,13 +73,15 @@
 /*
  * On a host whose libc is not illumos', the headers below want the "_t"
  * integer spellings and boolean_t that illumos' <sys/types.h> would have
- * supplied.  This has to come first, ahead of them.  -DCTF_NATIVE_COMPAT is
- * set only by tools/ctf/Makefile.ctf.native; on illumos the real headers
- * already provide all of it.
+ * supplied.  This has to come first, ahead of them.
+ *
+ * There is nothing to include here: $(COMPAT_CPPFLAGS) force-includes
+ * native_compat.h ahead of every translation unit, which is what "has to come
+ * first" requires and what a #include in the middle of this file cannot
+ * guarantee.  The relative path this used to name -- ../native/ -- did not
+ * survive the move to tools/libcompat, and could not: the header no longer
+ * sits at a fixed offset from this file.
  */
-#ifdef	CTF_NATIVE_COMPAT
-#include "../native/native_compat.h"
-#endif
 
 #include <uts/common/sys/ccompile.h>
 #include <uts/common/sys/ctf.h>
