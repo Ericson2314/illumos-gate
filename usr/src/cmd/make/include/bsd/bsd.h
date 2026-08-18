@@ -33,9 +33,11 @@
 #include <signal.h>
 
 
-#ifndef __cplusplus
+/*
+ * illumos <signal.h> supplies this, but a foreign libc does not.  Repeating
+ * the typedef verbatim is harmless where it is already visible.
+ */
 typedef void (*SIG_PF) (int);
-#endif
 
 #ifdef __cplusplus
 extern "C" SIG_PF bsd_signal(int a, SIG_PF b);

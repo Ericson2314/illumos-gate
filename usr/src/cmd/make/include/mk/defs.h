@@ -74,7 +74,10 @@
 #define	SETVAR(name, value, append) \
 				setvar_daemon(name, value, append, no_daemon, \
 				true, debug_level)
+/* <sys/param.h> already defines this on some hosts. */
+#ifndef	MAX
 #define	MAX(a, b)		(((a) > (b))?(a):(b))
+#endif
 /*
  * New feature added to SUN5_0 make,  invoke the vanilla svr4 make when
  * the USE_SVR4_MAKE environment variable is set.
@@ -298,12 +301,6 @@ extern	wchar_t		*wcs_ptr2;
 extern	long int	hostid;
 extern	Boolean		path_reset;
 extern	Boolean		rebuild_arg0;
-
-/*
- * Declarations of system defined variables
- */
-/* On linux this variable is defined in 'signal.h' */
-extern	char		*sys_siglist[];
 
 /*
  * Declarations of system supplied functions

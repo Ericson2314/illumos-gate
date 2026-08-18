@@ -37,7 +37,7 @@
 #include <libintl.h>
 
 static	void		file_lock_error(char *msg, char *file, const char *str,
-    char *arg1, char * arg2);
+    const char *arg1, const char *arg2);
 
 #define BLOCK_INTERUPTS sigfillset(&newset) ; \
 	sigprocmask(SIG_SETMASK, &newset, &oldset)
@@ -155,7 +155,8 @@ file_lock(char *name, char *lockname, int *file_locked, int timeout)
  * Format a message telling why the lock could not be created.
  */
 static	void
-file_lock_error(char *msg, char *file, const char *str, char *arg1, char *arg2)
+file_lock_error(char *msg, char *file, const char *str, const char *arg1,
+    const char *arg2)
 {
 	int		len, err;
 	char		*ptr;
