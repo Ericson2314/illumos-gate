@@ -51,9 +51,9 @@
 #include <stdlib.h>
 #include <sys/errno.h>		/* ENOENT */
 #include <sys/stat.h>		/* fstat() */
+#include <ctype.h>		/* isalpha() */
 #include <fcntl.h>		/* open() */
-
-#	include <sys/systeminfo.h>	/* sysinfo() */
+#include <libintl.h>		/* gettext() */
 
 #include <sys/types.h>		/* stat() */
 #include <sys/wait.h>		/* wait() */
@@ -73,7 +73,17 @@ extern void job_adjust_fini();
 #define	LD_SUPPORT_ENV_VAR_32	"SGS_SUPPORT_32"
 #define	LD_SUPPORT_ENV_VAR_64	"SGS_SUPPORT_64"
 #define	LD_SUPPORT_MAKE_LIB	"libmakestate.so.1"
-#ifdef __x86
+
+/*
+ * The /proc entry that resolves to the running executable.
+ */
+#ifdef	__sun
+#define	SELF_EXE	"/proc/self/path/a.out"
+#else
+#define	SELF_EXE	"/proc/self/exe"
+#endif
+
+#if defined(__i386__) || defined(__x86_64__)
 #define	LD_SUPPORT_MAKE_ARCH	"i386"
 #elif __sparc
 #define	LD_SUPPORT_MAKE_ARCH	"sparc"
@@ -930,9 +940,24 @@ read_command_options(int argc, char **argv)
 	extern char		*optarg;
 	extern int		optind, opterr, optopt;
 
-#define SUNPRO_CMD_OPTS	"-~Bbc:C:Ddef:g:ij:K:kM:m:NnO:o:PpqRrSsTtuVvwx:"
+/*
+ * A leading `-' asks Solaris getopt(3C) for nothing in particular: it stops
+ * at the first operand, which is what the loop below is written against --
+ * it skips operands itself, and relies on getopt() not having consumed
+ * them.  GNU getopt() does give the leading `-' a meaning, namely "return
+ * operands as option 1", and then the loop blanks each one out of argv[] as
+ * a spent option, losing every target named on the command line.  `+' is
+ * the GNU spelling of "stop at the first operand".
+ */
+#ifdef	__sun
+#define	CMD_OPTS_LEAD	"-"
+#else
+#define	CMD_OPTS_LEAD	"+"
+#endif
 
-#	define SVR4_CMD_OPTS   "-c:C:ef:g:ij:km:nO:o:pqrsTtVv"
+#define SUNPRO_CMD_OPTS	CMD_OPTS_LEAD "~Bbc:C:Ddef:g:ij:K:kM:m:NnO:o:PpqRrSsTtuVvwx:"
+
+#	define SVR4_CMD_OPTS   CMD_OPTS_LEAD "c:C:ef:g:ij:km:nO:o:pqrsTtVv"
 
 	/*
 	 * Added V in SVR4_CMD_OPTS also, which is going to be a hidden
@@ -1633,8 +1658,7 @@ make_install_prefix(void)
 	char origin[PATH_MAX];
 	char *dir;
 
-	if ((ret = readlink("/proc/self/path/a.out", origin,
-	    PATH_MAX - 1)) < 0)
+	if ((ret = readlink(SELF_EXE, origin, PATH_MAX - 1)) < 0)
 		fatal("failed to read origin from /proc\n");
 
 

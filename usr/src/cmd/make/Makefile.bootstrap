@@ -1,0 +1,142 @@
+#
+# This file and its contents are supplied under the terms of the
+# Common Development and Distribution License ("CDDL"), version 1.0.
+# You may only use this file in accordance with the terms of version
+# 1.0 of the CDDL.
+#
+# A full copy of the text of the CDDL should have accompanied this
+# source.  A copy of the CDDL is also available via the Internet at
+# http://www.illumos.org/license/CDDL.
+#
+
+# Copyright 2026 John Ericson
+
+#
+# A build of make(1) for the machine doing the building, in a dialect that
+# make(1) itself does not have to understand.
+#
+# Every other makefile in the gate is read by dmake, which is this program.
+# That is fine on an illumos build machine, where dmake is already installed,
+# and impossible on any other, which is the whole difficulty of getting a
+# first build off the ground on a foreign host.  So this one makefile -- and
+# only this one -- is written in the common subset of make dialects, so that
+# whatever make the host happens to ship can bootstrap the real one.
+#
+# It is deliberately not wired into usr/src/cmd/make/Makefile: the normal
+# illumos build must keep using Makefile.com, which knows about CTF, the
+# proto area, message catalogues and the rest.  This is the bootstrap path
+# only, and it links against the host's own libc rather than the gate's.
+#
+# Usage:
+#
+#	make -f Makefile.bootstrap
+#	make -f Makefile.bootstrap install PREFIX=/somewhere
+#
+
+PREFIX =	/usr/local
+DESTDIR =
+
+CXX =		c++
+CXXFLAGS =	-O2
+CPPFLAGS =
+LDFLAGS =
+
+# host2netname()/netname2host(), used by bin/pmake.cc, live in libtirpc on a
+# host whose libc has no Secure RPC.
+RPCLIBS =	-ltirpc
+LIBS =		-lpthread $(RPCLIBS)
+
+INCLUDES =	-I./include
+
+# -D_FILE_OFFSET_BITS=64 as in Makefile.com.  The warning suppressions match
+# the CCERRWARN list there; this code predates a good deal of what a modern
+# compiler complains about, and none of it is worth churning for a bootstrap.
+DEFS =		-D_FILE_OFFSET_BITS=64
+WARN =		-Wno-unused-variable -Wno-switch -Wno-parentheses \
+		-Wno-unused-function -Wno-clobbered -Wno-uninitialized \
+		-Wno-write-strings -Wno-deprecated
+
+MKSH_OBJS = \
+	lib/mksh/dosys.o \
+	lib/mksh/globals.o \
+	lib/mksh/i18n.o \
+	lib/mksh/macro.o \
+	lib/mksh/misc.o \
+	lib/mksh/mksh.o \
+	lib/mksh/read.o
+
+# mount_vroot() and utimes_vroot() are not called by make, and both files
+# re-declare the libc entry point they wrap with the illumos signature, which
+# a foreign libc does not share.  Leave them out rather than paper over that.
+VROOT_OBJS = \
+	lib/vroot/access.o \
+	lib/vroot/args.o \
+	lib/vroot/chdir.o \
+	lib/vroot/chmod.o \
+	lib/vroot/chown.o \
+	lib/vroot/chroot.o \
+	lib/vroot/creat.o \
+	lib/vroot/execve.o \
+	lib/vroot/lock.o \
+	lib/vroot/lstat.o \
+	lib/vroot/mkdir.o \
+	lib/vroot/open.o \
+	lib/vroot/readlink.o \
+	lib/vroot/report.o \
+	lib/vroot/rmdir.o \
+	lib/vroot/setenv.o \
+	lib/vroot/stat.o \
+	lib/vroot/truncate.o \
+	lib/vroot/unlink.o \
+	lib/vroot/vroot.o
+
+BSD_OBJS = \
+	lib/bsd/bsd.o
+
+# The same list as $(OBJS) in bin/Makefile.
+BIN_OBJS = \
+	bin/ar.o \
+	bin/depvar.o \
+	bin/doname.o \
+	bin/dosys.o \
+	bin/files.o \
+	bin/globals.o \
+	bin/implicit.o \
+	bin/macro.o \
+	bin/main.o \
+	bin/misc.o \
+	bin/nse_printdep.o \
+	bin/parallel.o \
+	bin/pmake.o \
+	bin/read.o \
+	bin/read2.o \
+	bin/rep.o \
+	bin/state.o
+
+OBJS =		$(BIN_OBJS) $(MKSH_OBJS) $(VROOT_OBJS) $(BSD_OBJS)
+
+RULES =		bin/make.rules.file bin/svr4.make.rules.file
+
+all: make
+
+make: $(OBJS)
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
+
+.SUFFIXES: .cc .o
+
+.cc.o:
+	$(CXX) $(CXXFLAGS) $(WARN) $(CPPFLAGS) $(DEFS) $(INCLUDES) -c -o $@ $<
+
+install: all
+	mkdir -p $(DESTDIR)$(PREFIX)/bin
+	mkdir -p $(DESTDIR)$(PREFIX)/share/lib/make
+	cp make $(DESTDIR)$(PREFIX)/bin/make
+	ln -sf make $(DESTDIR)$(PREFIX)/bin/dmake
+	cp bin/make.rules.file $(DESTDIR)$(PREFIX)/share/lib/make/make.rules
+	cp bin/svr4.make.rules.file \
+	    $(DESTDIR)$(PREFIX)/share/lib/make/svr4.make.rules
+
+clean:
+	rm -f $(OBJS) make
+
+.PHONY: all install clean

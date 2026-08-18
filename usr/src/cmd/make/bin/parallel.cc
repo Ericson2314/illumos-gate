@@ -252,7 +252,10 @@ execute_parallel(Property line, Boolean waitflg, Boolean local)
 #include <sys/ipc.h>		/* ftok() */
 #include <sys/shm.h>		/* shmget(), shmat(), shmdt(), shmctl() */
 #include <semaphore.h>		/* sem_init(), sem_trywait(), sem_post(), sem_destroy() */
-#include <sys/loadavg.h>	/* getloadavg() */
+#include <stdlib.h>		/* getloadavg() */
+#ifdef __sun
+#include <sys/loadavg.h>	/* LOADAVG_1MIN */
+#endif
 
 /*
  *	adjust_pmake_max_jobs (int pmake_max_jobs)

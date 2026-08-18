@@ -35,7 +35,10 @@
 #include <sys/time.h>		/* timestruc_t */
 #include <errno.h>		/* errno */
 
+#include <wchar.h>		/* wcslen() */
 #include <wctype.h>
+
+#include <mksh/hostcompat.h>	/* what a non-illumos libc lacks */
 
 /*
  * A type and some utilities for boolean values
@@ -862,7 +865,7 @@ extern Boolean		do_not_exec_rule;		/* `-n' */
 extern Boolean		dollarget_seen;
 extern Boolean		dollarless_flag;
 extern Name		dollarless_value;
-extern char		**environ;
+extern "C" char		**environ;
 extern Envvar		envvar;
 extern int		exit_status;
 extern wchar_t		*file_being_read;
