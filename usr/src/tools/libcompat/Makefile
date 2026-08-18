@@ -107,7 +107,8 @@ MACHSYSHDRS=	sys/machtypes.h
 # and <sys/auxv_SPARC.h> beside it, and nothing in the list says so; staging
 # auxv.h alone is a known way to break elfextract.  They move together.
 #
-HEADHDRS=	dlfcn.h \
+HEADHDRS=	elf.h \
+		dlfcn.h \
 		gelf.h \
 		libelf.h \
 		proc_service.h \
