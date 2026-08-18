@@ -59,8 +59,15 @@ ELFCAP=		$(SRC)/common/elfcap
 
 # Reassign CPPFLAGS so that local search paths are used before any parent
 # $ROOT paths.
+#
+# $(COMPAT_CPPFLAGS) is empty for an illumos-hosted build: it is defined in
+# tools/Makefile.tools, which nothing under cmd/ includes.  It is here so that
+# these same makefiles can be built against a foreign libc -- with libcompat
+# supplying the headers -- instead of tools/sgs having to keep a forked copy of
+# them for that case.
+#
 CPPFLAGS =	-I. -I../common -I$(SGSHOME)/include -I$(SGSHOME)/include/$(MACH) \
-		$(CPPFLAGS.master) -I$(ELFCAP)
+		$(CPPFLAGS.master) -I$(ELFCAP) $(COMPAT_CPPFLAGS)
 
 # PICS64 is unique to our environment
 $(PICS64) :=	sparc_CFLAGS += $(C_PICFLAGS)
