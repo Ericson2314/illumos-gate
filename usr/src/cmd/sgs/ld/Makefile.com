@@ -44,7 +44,14 @@ MAPOPTS =	$(MAPFILES:%=-Wl,-M%)
 RPATH =		'-R$$ORIGIN/../../lib/$(MACH64)'
 
 LDFLAGS +=	$(VERSREF) $(MAPOPTS) $(RPATH)
-LDLIBS +=	-lumem $(LDLIBDIR64) -lld $(ELFLIBDIR64) -lelf \
+#
+# $(UMEMLIB) rather than a bare -lumem: libumem is illumos', and a build of
+# these sources against a foreign libc has to be able to drop it. The default
+# keeps an illumos-hosted build exactly as it was.
+#
+UMEMLIB =	-lumem
+
+LDLIBS +=	$(UMEMLIB) $(LDLIBDIR64) -lld $(ELFLIBDIR64) -lelf \
 		    $(LDDBGLIBDIR64) -llddbg $(CONVLIBDIR64) -lconv
 
 CERRWARN +=	-_gcc=-Wno-switch
