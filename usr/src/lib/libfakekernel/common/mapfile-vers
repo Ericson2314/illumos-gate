@@ -187,6 +187,8 @@ SYMBOL_VERSION SUNWprivate_1.1 {
 	kstat_waitq_to_runq;
 	kstat_runq_back_to_waitq;
 
+	lowbit64;
+
 	msec_per_tick;
 
 	mutex_owned;

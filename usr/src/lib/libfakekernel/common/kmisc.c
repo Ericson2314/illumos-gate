@@ -61,6 +61,49 @@ ddi_get_pid(void)
 }
 
 /*
+ * Find lowest one bit set.
+ *	Returns bit number + 1 of lowest bit that is set, otherwise returns 0.
+ */
+int
+lowbit64(uint64_t i)
+{
+	int h = 64;
+
+	if (i == 0)
+		return (0);
+
+	if (i & 0x00000000ffffffffULL)
+		h -= 32;
+	else
+		i >>= 32;
+
+	if (i & 0x0000ffff)
+		h -= 16;
+	else
+		i >>= 16;
+
+	if (i & 0x00ff)
+		h -= 8;
+	else
+		i >>= 8;
+
+	if (i & 0x0f)
+		h -= 4;
+	else
+		i >>= 4;
+
+	if (i & 0x3)
+		h -= 2;
+	else
+		i >>= 2;
+
+	if (i & 0x1)
+		h -= 1;
+
+	return (h);
+}
+
+/*
  * Find highest one bit set.
  *	Returns bit number + 1 of highest bit that is set, otherwise returns 0.
  */
