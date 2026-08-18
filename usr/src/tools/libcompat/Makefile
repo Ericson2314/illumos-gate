@@ -83,7 +83,8 @@ SYSHDRS=	sys/elf.h \
 		sys/machelf.h \
 		sys/secflags.h \
 		sys/procset.h \
-		sys/debug.h
+		sys/debug.h \
+		sys/ctype.h
 
 #
 # <sys/machtypes.h> is per-ISA; everything above is machine-independent.  The
