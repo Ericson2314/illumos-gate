@@ -53,6 +53,8 @@
 #include <sys/mkdev.h>
 #include <sys/ddi.h>
 #include <sys/sunddi.h>
+#include <sys/ddi_implfuncs.h>
+#include <sys/bootconf.h>
 
 #include "fs/fs_subr.h"
 #include "virtiofs.h"
@@ -106,6 +108,7 @@ static int virtiofs_unmount(vfs_t *, int, cred_t *);
 static int virtiofs_root(vfs_t *, vnode_t **);
 static int virtiofs_statvfs(vfs_t *, struct statvfs64 *);
 static int virtiofs_vget(vfs_t *, vnode_t **, struct fid *);
+static int virtiofs_mountroot(vfs_t *, enum whymountroot);
 
 int
 _init(void)
@@ -143,6 +146,7 @@ virtiofsinit(int fstype, char *name)
 		VFSNAME_ROOT,		{ .vfs_root = virtiofs_root },
 		VFSNAME_STATVFS,	{ .vfs_statvfs = virtiofs_statvfs },
 		VFSNAME_VGET,		{ .vfs_vget = virtiofs_vget },
+		VFSNAME_MOUNTROOT,	{ .vfs_mountroot = virtiofs_mountroot },
 		NULL,			NULL
 	};
 	int error;
@@ -192,16 +196,95 @@ virtiofs_alloc_dev(void)
 	return (dev);
 }
 
+/*
+ * The half of a mount that does not depend on how we were called: find the
+ * device advertising this tag, negotiate FUSE with it, and build the root
+ * vnode.  Both virtiofs_mount() and virtiofs_mountroot() end here.  Anything
+ * that needs a mount point, a cred, or the mount option table stays in the
+ * caller, because the root mount has none of the three.
+ */
+static int
+virtiofs_mountdev(vfs_t *vfsp, const char *tag, boolean_t override_ids,
+    uid_t uid, gid_t gid)
+{
+	vfsmnt_t *vfs;
+	vtfs_t *dev;
+	vfnode_t *rootvfn;
+	struct fuse_attr_out ao;
+	int error;
+
+	if ((dev = vtfs_hold_by_tag(tag)) == NULL) {
+		cmn_err(CE_NOTE, "virtiofs: no Virtio FS device with tag "
+		    "\"%s\"", tag);
+		return (ENXIO);
+	}
+
+	vfs = kmem_zalloc(sizeof (*vfs), KM_SLEEP);
+	vfs->vfs_vfsp = vfsp;
+	vfs->vfs_dev = dev;
+	vfs->vfs_dev_no = virtiofs_alloc_dev();
+	vfs->vfs_override_ids = override_ids;
+	vfs->vfs_uid = uid;
+	vfs->vfs_gid = gid;
+	mutex_init(&vfs->vfs_lock, NULL, MUTEX_DEFAULT, NULL);
+	rw_init(&vfs->vfs_hash_lock, NULL, RW_DEFAULT, NULL);
+
+	vfsp->vfs_data = (caddr_t)vfs;
+	vfsp->vfs_fstype = virtiofsfstype;
+	vfsp->vfs_dev = vfs->vfs_dev_no;
+	vfsp->vfs_bsize = MAXBSIZE;
+	vfsp->vfs_flag |= VFS_RDONLY | VFS_NOTRUNC;
+	vfs_make_fsid(&vfsp->vfs_fsid, vfs->vfs_dev_no, virtiofsfstype);
+
+	/*
+	 * Negotiate the protocol version before anything else; a server will
+	 * not answer any other opcode until it has seen a FUSE_INIT.
+	 */
+	if ((error = virtiofs_fuse_init(vfs)) != 0) {
+		cmn_err(CE_WARN, "virtiofs: FUSE_INIT failed on tag \"%s\": "
+		    "%d", tag, error);
+		goto fail;
+	}
+
+	bzero(&ao, sizeof (ao));
+	if ((error = virtiofs_fuse_getattr(vfs, FUSE_ROOT_ID, &ao)) != 0) {
+		cmn_err(CE_WARN, "virtiofs: cannot stat the root of tag "
+		    "\"%s\": %d", tag, error);
+		goto fail;
+	}
+
+	/*
+	 * The root nodeid is never the result of a lookup, so there is no
+	 * lookup count to hand over and none to forget later.
+	 */
+	rootvfn = virtiofs_node_hold(vfs, FUSE_ROOT_ID, &ao.attr, 0);
+	virtiofs_node_setattr(rootvfn, &ao.attr, ao.attr_valid,
+	    ao.attr_valid_nsec);
+
+	vfs->vfs_rootvp = VFTOV(rootvfn);
+	vfs->vfs_rootvp->v_flag |= VROOT;
+
+	return (0);
+
+fail:
+	mutex_destroy(&vfs->vfs_lock);
+	rw_destroy(&vfs->vfs_hash_lock);
+	kmem_free(vfs, sizeof (*vfs));
+	vfsp->vfs_data = NULL;
+	vtfs_rele(dev);
+
+	return (error);
+}
+
 static int
 virtiofs_mount(vfs_t *vfsp, vnode_t *mvp, struct mounta *uap, cred_t *cr)
 {
-	vfsmnt_t *vfs = NULL;
-	vtfs_t *dev = NULL;
-	vfnode_t *rootvfn;
-	struct fuse_attr_out ao;
 	struct pathname dpn;
 	char *tag = NULL;
 	char *optval;
+	boolean_t override_ids = B_FALSE;
+	uid_t uid = 0;
+	gid_t gid = 0;
 	size_t taglen;
 	int error;
 
@@ -249,91 +332,31 @@ virtiofs_mount(vfs_t *vfsp, vnode_t *mvp, struct mounta *uap, cred_t *cr)
 		return (error);
 	}
 
-	if ((dev = vtfs_hold_by_tag(tag)) == NULL) {
-		cmn_err(CE_NOTE, "virtiofs: no Virtio FS device with tag "
-		    "\"%s\"", tag);
-		error = ENXIO;
-		goto fail;
-	}
-
-	vfs = kmem_zalloc(sizeof (*vfs), KM_SLEEP);
-	vfs->vfs_vfsp = vfsp;
-	vfs->vfs_dev = dev;
-	vfs->vfs_dev_no = virtiofs_alloc_dev();
-	mutex_init(&vfs->vfs_lock, NULL, MUTEX_DEFAULT, NULL);
-	rw_init(&vfs->vfs_hash_lock, NULL, RW_DEFAULT, NULL);
-
 	if (vfs_optionisset(vfsp, VFOPT_UID, &optval)) {
 		long v;
 
 		if (ddi_strtol(optval, NULL, 10, &v) != 0 || v < 0) {
 			error = EINVAL;
-			goto fail;
+			goto out;
 		}
-		vfs->vfs_uid = (uid_t)v;
-		vfs->vfs_override_ids = B_TRUE;
+		uid = (uid_t)v;
+		override_ids = B_TRUE;
 	}
 	if (vfs_optionisset(vfsp, VFOPT_GID, &optval)) {
 		long v;
 
 		if (ddi_strtol(optval, NULL, 10, &v) != 0 || v < 0) {
 			error = EINVAL;
-			goto fail;
+			goto out;
 		}
-		vfs->vfs_gid = (gid_t)v;
-		vfs->vfs_override_ids = B_TRUE;
+		gid = (gid_t)v;
+		override_ids = B_TRUE;
 	}
 
-	vfsp->vfs_data = (caddr_t)vfs;
-	vfsp->vfs_fstype = virtiofsfstype;
-	vfsp->vfs_dev = vfs->vfs_dev_no;
-	vfsp->vfs_bsize = MAXBSIZE;
-	vfsp->vfs_flag |= VFS_RDONLY | VFS_NOTRUNC;
-	vfs_make_fsid(&vfsp->vfs_fsid, vfs->vfs_dev_no, virtiofsfstype);
-	vfs_setmntopt(vfsp, MNTOPT_RO, NULL, 0);
+	if ((error = virtiofs_mountdev(vfsp, tag, override_ids, uid, gid)) == 0)
+		vfs_setmntopt(vfsp, MNTOPT_RO, NULL, 0);
 
-	/*
-	 * Negotiate the protocol version before anything else; a server will
-	 * not answer any other opcode until it has seen a FUSE_INIT.
-	 */
-	if ((error = virtiofs_fuse_init(vfs)) != 0) {
-		cmn_err(CE_WARN, "virtiofs: FUSE_INIT failed on tag \"%s\": "
-		    "%d", tag, error);
-		goto fail;
-	}
-
-	bzero(&ao, sizeof (ao));
-	if ((error = virtiofs_fuse_getattr(vfs, FUSE_ROOT_ID, &ao)) != 0) {
-		cmn_err(CE_WARN, "virtiofs: cannot stat the root of tag "
-		    "\"%s\": %d", tag, error);
-		goto fail;
-	}
-
-	/*
-	 * The root nodeid is never the result of a lookup, so there is no
-	 * lookup count to hand over and none to forget later.
-	 */
-	rootvfn = virtiofs_node_hold(vfs, FUSE_ROOT_ID, &ao.attr, 0);
-	virtiofs_node_setattr(rootvfn, &ao.attr, ao.attr_valid,
-	    ao.attr_valid_nsec);
-
-	vfs->vfs_rootvp = VFTOV(rootvfn);
-	vfs->vfs_rootvp->v_flag |= VROOT;
-
-	pn_free(&dpn);
-	kmem_free(tag, VIRTIO_FS_TAG_LEN + 1);
-
-	return (0);
-
-fail:
-	if (vfs != NULL) {
-		mutex_destroy(&vfs->vfs_lock);
-		rw_destroy(&vfs->vfs_hash_lock);
-		kmem_free(vfs, sizeof (*vfs));
-		vfsp->vfs_data = NULL;
-	}
-	if (dev != NULL)
-		vtfs_rele(dev);
+out:
 	pn_free(&dpn);
 	kmem_free(tag, VIRTIO_FS_TAG_LEN + 1);
 
@@ -483,4 +506,125 @@ virtiofs_vget(vfs_t *vfsp, vnode_t **vpp, struct fid *fidp)
 	rw_exit(&vfs->vfs_hash_lock);
 
 	return (*vpp == NULL ? ESTALE : 0);
+}
+
+/*
+ * ROOT
+ *
+ * The tag the root file system is on.
+ *
+ * A Virtio FS device has no path worth naming.  It is found by the tag it
+ * advertises in its configuration space, and that tag is chosen on the host
+ * side, so there is nothing for a "bootpath" property to point at and reusing
+ * that property would misdescribe what the string is.  This follows
+ * "zfs-bootfs" instead: one dedicated property holding exactly the tag.
+ *
+ * It has a default, deliberately.  A system rooted on a Virtio FS share is
+ * booted with "-B fstype=virtiofs", and a second property saying "...on the
+ * only Virtio FS device present" would earn its keep only on a guest with
+ * more than one, which is not the case worth optimising for.  The default is
+ * the tag that the userland mounts of a host store already use, so
+ * "fstype=virtiofs" on its own is enough to boot.
+ */
+#define	VIRTIOFS_ROOT_TAG	"store"
+
+static void
+virtiofs_root_tag(char *tag, size_t len)
+{
+	char *propstr;
+
+	if (ddi_prop_lookup_string(DDI_DEV_T_ANY, ddi_root_node(),
+	    DDI_PROP_DONTPASS, "virtiofs-bootfs", &propstr) == DDI_SUCCESS) {
+		(void) strlcpy(tag, propstr, len);
+		ddi_prop_free(propstr);
+	} else {
+		(void) strlcpy(tag, VIRTIOFS_ROOT_TAG, len);
+	}
+}
+
+static int
+virtiofs_mountroot(vfs_t *vfsp, enum whymountroot why)
+{
+	static int virtiofsrootdone = 0;
+	char tag[VIRTIO_FS_TAG_LEN + 1];
+	int error;
+
+	/*
+	 * ROOT_REMOUNT is the pass that turns a disk root writable once
+	 * something has blessed it, and ROOT_UNMOUNT is the flush on the way
+	 * down.  A read-only file system with no local state has nothing to do
+	 * in either, but it must still succeed: rootconf()'s caller treats a
+	 * failed remount as fatal.
+	 */
+	switch (why) {
+	case ROOT_INIT:
+		break;
+	case ROOT_REMOUNT:
+	case ROOT_UNMOUNT:
+		return (0);
+	default:
+		return (EINVAL);
+	}
+
+	if (virtiofsrootdone++)
+		return (EBUSY);
+
+	virtiofs_root_tag(tag, sizeof (tag));
+
+	/*
+	 * ORDERING.  We run from rootconf(), which vfs_mountroot() calls from
+	 * main().  By now startup() has been through startup_modules(), which
+	 * calls setup_ddi(), which builds the device tree and -- via
+	 * impl_bus_initialprobe() -- loads misc/pci_autoconfig and enumerates
+	 * the whole PCI hierarchy.  So our device already has a dev_info_t
+	 * bound to "vtfs".  What has not happened is attach(9E), because
+	 * nothing has yet had a reason to ask for it.  main() has also dropped
+	 * to spl0 and set interrupts_unleashed, which matters a great deal to
+	 * a file system that sleeps on a virtqueue completion interrupt for
+	 * every single request it makes.
+	 *
+	 * So we ask for the attach ourselves.  This is the move strplumb()
+	 * makes to get the boot NIC attached for an NFS root, and the one
+	 * hvmboot_rootconf() makes for xdf and xnf; i_ddi_attach_hw_nodes() is
+	 * documented as being for exactly this phase of boot and discouraged
+	 * outside it.
+	 *
+	 * The one thing that cannot be arranged from here is the boot archive.
+	 * fs/virtiofs depends on drv/vtfs, which depends on misc/virtio, and
+	 * all three have to have been placed there by the boot loader --
+	 * there is no root yet to load them from.
+	 */
+	if (i_ddi_attach_hw_nodes("vtfs") != DDI_SUCCESS) {
+		cmn_err(CE_WARN, "virtiofs: no Virtio FS device could be "
+		    "attached; cannot mount root");
+		return (ENXIO);
+	}
+
+	if ((error = vfs_lock(vfsp)) != 0)
+		return (error);
+
+	/*
+	 * No id override for the root.  A store mount overrides ids because
+	 * the host's are meaningless in this system's name service, but the
+	 * root file system is where that name service lives; there is nothing
+	 * yet to disagree with, and silently rewriting every uid on the way in
+	 * would be a surprise that survives into single user mode.
+	 */
+	if ((error = virtiofs_mountdev(vfsp, tag, B_FALSE, 0, 0)) != 0) {
+		vfs_unlock(vfsp);
+		cmn_err(CE_WARN, "virtiofs: cannot mount root on tag \"%s\": "
+		    "%d", tag, error);
+		return (error);
+	}
+
+	/*
+	 * vfs_mountroot() makes rootfs.bo_name the resource in mnttab.  The
+	 * tag is the only name this file system has.
+	 */
+	(void) strlcpy(rootfs.bo_name, tag, BO_MAXOBJNAME);
+
+	vfs_add(NULL, vfsp, MS_RDONLY);
+	vfs_unlock(vfsp);
+
+	return (0);
 }
