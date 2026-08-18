@@ -20,6 +20,7 @@ install-*.out
 __pycache__
 
 sgs/include/sys
+libcompat/include
 sgs/*/*.[chs]
 !sgs/sgsmsg/sgsmsg.c
 !libcompat/common/*.[chs]

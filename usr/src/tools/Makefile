@@ -42,6 +42,8 @@ include ../Makefile.master
 # installation rules in their makefiles. This includes the Makefile for
 # 'install.bin' itself.
 BOOT_SUBDIRS=		\
+	libcompat	\
+	.WAIT		\
 	smatch		\
 	.WAIT		\
 	cw		\
