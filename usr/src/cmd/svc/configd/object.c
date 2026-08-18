@@ -320,8 +320,32 @@ tx_process_cmds(tx_commit_data_t *data)
 				if (r != REP_PROTOCOL_SUCCESS)
 					break;
 
+				/*
+				 * The (size_t) cast is load-bearing on a
+				 * 64-bit configd.  TX_SIZE() is
+				 * P2ROUNDUP(x, sizeof (uint32_t)), and
+				 * P2ROUNDUP() is (-(-(x) & -(align))): with
+				 * a uint32_t x, -(x) is evaluated in 32 bits
+				 * and then ZERO-extended before being masked
+				 * against a 64-bit -(align), so the closing
+				 * negation lands in the upper word --
+				 * TX_SIZE((uint32_t)27) is 0xffffffff0000001c
+				 * rather than 0x1c.  Here that feeds straight
+				 * into pointer arithmetic, putting `v' exactly
+				 * 2^32 below where it belongs and killing
+				 * configd with SIGSEGV.
+				 *
+				 * The other TX_SIZE() call sites assign the
+				 * result back into a 32-bit variable, which
+				 * truncates the damage away; this one does
+				 * not.  It is reached only from the second
+				 * iteration of this loop, so a dependency
+				 * with one service_fmri is fine and one with
+				 * two is fatal.
+				 */
 				/*LINTED alignment*/
-				v = (uint32_t *)((caddr_t)str + TX_SIZE(*v));
+				v = (uint32_t *)((caddr_t)str +
+				    TX_SIZE((size_t)*v));
 			}
 		}
 		if (r != REP_PROTOCOL_SUCCESS)
