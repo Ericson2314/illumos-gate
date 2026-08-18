@@ -81,6 +81,16 @@ COMPAT_CPPFLAGS=	-I$(COMPAT_DIR) -I$(COMPAT_INC) \
 			-include $(COMPAT_DIR)/native_compat.h
 COMPAT_SUPPORT_SRC=	$(COMPAT_DIR)/native_support.c
 
+#
+# The host-forwarding <sys/elf.h>, kept out of $(COMPAT_CPPFLAGS) on purpose.
+# It sends <sys/elf.h> to the *host*'s <elf.h>, which is what the CTF tools
+# want -- they link the host libelf -- and is exactly wrong for the sgs tree,
+# where illumos' own <sys/link.h> then collides with glibc over Elf32_Dyn and
+# friends.  A consumer that wants it asks for it.
+#
+COMPAT_HOSTELF=		$(SRC)/tools/libcompat/host-elf
+COMPAT_HOSTELF_CPPFLAGS=	-I$(COMPAT_HOSTELF)
+
 # To work around a bootstrapping problem, we can't rely on cw(1) knowing how
 # to translate -shared as we may be using an older one to build the current
 # tools.

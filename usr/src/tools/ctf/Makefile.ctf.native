@@ -35,6 +35,7 @@
 # makefiles, and -include options are processed in the order given, so the
 # shims have to be pulled in from inside that header to land ahead of it.
 #
+CPPFLAGS +=	$(COMPAT_HOSTELF_CPPFLAGS)
 CPPFLAGS +=	$(COMPAT_CPPFLAGS)
 CPPFLAGS +=	-DCTF_NATIVE_COMPAT
 

@@ -25,6 +25,7 @@ sgs/*/*.[chs]
 !sgs/sgsmsg/sgsmsg.c
 !libcompat/common/*.[chs]
 !libcompat/common/sys/*.h
+!libcompat/host-elf/sys/*.h
 
 svc/libsqlite/*.[ch]
 svc/svccfg/svccfg_grammar.[ch]

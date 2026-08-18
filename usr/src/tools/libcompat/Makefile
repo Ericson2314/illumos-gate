@@ -176,6 +176,7 @@ $(LIBRARY): $(OBJS)
 #
 ROOTONBLDINC=		$(ROOTONBLD)/include
 ROOTONBLDINCNATIVE=	$(ROOTONBLD)/include-native
+ROOTONBLDINCHOSTELF=	$(ROOTONBLD)/include-host-elf
 
 install: all $(ROOTONBLDLIBMACH)/$(LIBRARY) install_hdrs
 
@@ -185,6 +186,8 @@ install_hdrs: $(HDRS)
 	$(CP) include/*.h $(ROOTONBLDINC)/
 	$(CP) common/*.h $(ROOTONBLDINCNATIVE)/
 	$(CP) common/sys/*.h $(ROOTONBLDINCNATIVE)/sys/
+	$(MKDIR) -p $(ROOTONBLDINCHOSTELF)/sys
+	$(CP) host-elf/sys/*.h $(ROOTONBLDINCHOSTELF)/sys/
 
 $(ROOTONBLDLIBMACH):
 	$(MKDIR) -p $@
