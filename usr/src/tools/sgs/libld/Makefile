@@ -37,7 +37,18 @@ include		../Makefile.com
 # that and just make sure to find everything relative to the tools proto
 # area.
 #
-LDLIBS =	-L../libconv -lconv -L$(ROOTONBLDLIBMACH64) -llddbg -lelf -lc
+#
+# Spelled as overridable macros, the way liblddbg/Makefile already spells
+# CONVLIBDIR. The defaults are the in-tree sibling directories a workspace
+# build uses; a build that gets these libraries from somewhere else -- built
+# separately, one package each -- can then say so on the command line instead
+# of being told where its siblings must live.
+#
+CONVLIBDIR=	-L../libconv
+LDDBGLIBDIR=	-L$(ROOTONBLDLIBMACH64)
+ELFLIBDIR=	-L$(ROOTONBLDLIBMACH64)
+
+LDLIBS =	$(CONVLIBDIR) -lconv $(LDDBGLIBDIR) -llddbg $(ELFLIBDIR) -lelf -lc
 NATIVE_LIBS +=	libc.so
 
 #
