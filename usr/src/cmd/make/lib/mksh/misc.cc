@@ -49,6 +49,7 @@
 #include <sys/wait.h>		/* wait() */
 
 #include <string.h>		/* strerror() */
+#include <unistd.h>		/* getpid() */
 #include <libintl.h>
 
 

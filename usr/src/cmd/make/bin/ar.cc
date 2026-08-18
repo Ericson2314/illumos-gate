@@ -41,6 +41,7 @@
  */
 #include <alloca.h>		/* alloca() */
 #include <ar.h>
+#include <ctype.h>		/* isdigit() */
 #include <errno.h>		/* errno */
 #include <fcntl.h>		/* open() */
 #include <libintl.h>

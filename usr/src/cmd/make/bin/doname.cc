@@ -44,7 +44,6 @@
 #include <poll.h>
 #include <libintl.h>
 #include <signal.h>
-#include <stropts.h>
 #include <sys/errno.h>
 #include <sys/stat.h>
 #include <sys/types.h>

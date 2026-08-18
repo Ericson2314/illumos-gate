@@ -46,6 +46,8 @@
 #include <mksh/macro.h>		/* SETVAR() */
 #include <mksh/misc.h>		/* enable_interrupt() */
 #include <stdarg.h>		/* va_list, va_start(), va_end() */
+#include <time.h>		/* ctime() */
+#include <unistd.h>		/* getpid() */
 #include <vroot/report.h>	/* SUNPRO_DEPENDENCIES */
 #include <libintl.h>
 

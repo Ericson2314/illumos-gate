@@ -38,6 +38,7 @@
 #include <unistd.h>		/* getpid() */
 #include <errno.h>		/* errno    */
 #include <locale.h>		/* MB_CUR_MAX    */
+#include <libintl.h>		/* gettext() */
 
 /*
  * Defined macros
