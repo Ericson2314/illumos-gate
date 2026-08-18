@@ -91,7 +91,13 @@ HDRS=		$(SYSHDRS:%=include/%) $(MACHSYSHDRS:%=include/%)
 LIBRARY=	libcompat.a
 OBJS=		native_support.o
 
-CPPFLAGS +=	$(COMPAT_CPPFLAGS)
+#
+# $(COMPAT_CPPFLAGS) is -I on common/ plus the force-include of
+# native_compat.h.  That header reaches <sys/isa_defs.h>, which is one of the
+# gathered ones, so include/ has to be searched too -- and the gather has to
+# have happened, hence the $(HDRS) dependency on the object below.
+#
+CPPFLAGS +=	$(COMPAT_CPPFLAGS) -Iinclude
 
 .KEEP_STATE:
 
@@ -118,7 +124,7 @@ include/sys/types32.h: include/sys $(SRC)/uts/common/sys/types32.h
 	    $(SRC)/uts/common/sys/types32.h > $@
 	$(CHMOD) 644 $@
 
-native_support.o: common/native_support.c
+native_support.o: common/native_support.c $(HDRS)
 	$(NATIVECC) $(NATIVE_CFLAGS) $(CPPFLAGS) -c -o $@ common/native_support.c
 
 #
