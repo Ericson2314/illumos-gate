@@ -73,7 +73,13 @@ SYSHDRS=	sys/elf.h \
 		sys/queue.h \
 		sys/types32.h \
 		sys/containerof.h \
-		sys/stddef.h
+		sys/stddef.h \
+		sys/auxv.h \
+		sys/auxv_386.h \
+		sys/auxv_SPARC.h \
+		sys/avl.h \
+		sys/link.h \
+		sys/machelf.h
 
 #
 # <sys/machtypes.h> is per-ISA; everything above is machine-independent.  The
@@ -86,7 +92,26 @@ UTSDIR=		$($(MACH)_UTSDIR)
 
 MACHSYSHDRS=	sys/machtypes.h
 
-HDRS=		$(SYSHDRS:%=include/%) $(MACHSYSHDRS:%=include/%)
+#
+# The ELF API headers, from $(SRC)/head.  These are the other half of what
+# tools/sgs/include stages: that directory copies them into itself and the sgs
+# makefiles then -I it, which is why it cannot be consumed from outside the
+# workspace.  Gathering them here, installed, makes tools/sgs/include
+# redundant.
+#
+# NOTE the auxv trio.  <sys/auxv.h> does not compile without <sys/auxv_386.h>
+# and <sys/auxv_SPARC.h> beside it, and nothing in the list says so; staging
+# auxv.h alone is a known way to break elfextract.  They move together.
+#
+HEADHDRS=	dlfcn.h \
+		gelf.h \
+		libelf.h \
+		proc_service.h \
+		rtld_db.h \
+		link.h
+
+HDRS=		$(SYSHDRS:%=include/%) $(MACHSYSHDRS:%=include/%) \
+		$(HEADHDRS:%=include/%)
 
 LIBRARY=	libcompat.a
 OBJS=		native_support.o
@@ -108,6 +133,12 @@ include/sys:
 
 include/sys/%: include/sys $(SRC)/uts/common/sys/%
 	$(RM) $@; $(CP) $(SRC)/uts/common/sys/$(@F) $@; $(CHMOD) 644 $@
+
+include/%: include $(SRC)/head/%
+	$(RM) $@; $(CP) $(SRC)/head/$(@F) $@; $(CHMOD) 644 $@
+
+include:
+	$(MKDIR) -p include
 
 include/sys/machtypes.h: include/sys $(SRC)/uts/$(UTSDIR)/sys/machtypes.h
 	$(RM) $@; $(CP) $(SRC)/uts/$(UTSDIR)/sys/machtypes.h $@; $(CHMOD) 644 $@
@@ -151,6 +182,7 @@ install: all $(ROOTONBLDLIBMACH)/$(LIBRARY) install_hdrs
 install_hdrs: $(HDRS)
 	$(MKDIR) -p $(ROOTONBLDINC)/sys $(ROOTONBLDINCNATIVE)/sys
 	$(CP) include/sys/*.h $(ROOTONBLDINC)/sys/
+	$(CP) include/*.h $(ROOTONBLDINC)/
 	$(CP) common/*.h $(ROOTONBLDINCNATIVE)/
 	$(CP) common/sys/*.h $(ROOTONBLDINCNATIVE)/sys/
 
