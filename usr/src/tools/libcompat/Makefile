@@ -129,7 +129,24 @@ native_support.o: common/native_support.c
 $(LIBRARY): $(OBJS)
 	$(RM) $@; $(AR) $(ARFLAGS) $@ $(OBJS)
 
-install: all $(ROOTONBLDLIBMACH)/$(LIBRARY)
+#
+# The headers are outputs too, not just scratch for this directory's own -I.
+# They install into two separate trees on purpose, for the reason given at the
+# top: include/ is the gathered illumos headers, include-native/ is the shims,
+# and include-native/sys/elf.h deliberately shadows include/sys/elf.h for a
+# consumer that links the host libelf.  Merging them would make that choice
+# unexpressible.
+#
+ROOTONBLDINC=		$(ROOTONBLD)/include
+ROOTONBLDINCNATIVE=	$(ROOTONBLD)/include-native
+
+install: all $(ROOTONBLDLIBMACH)/$(LIBRARY) install_hdrs
+
+install_hdrs: $(HDRS)
+	$(MKDIR) -p $(ROOTONBLDINC)/sys $(ROOTONBLDINCNATIVE)/sys
+	$(CP) include/sys/*.h $(ROOTONBLDINC)/sys/
+	$(CP) common/*.h $(ROOTONBLDINCNATIVE)/
+	$(CP) common/sys/*.h $(ROOTONBLDINCNATIVE)/sys/
 
 $(ROOTONBLDLIBMACH):
 	$(MKDIR) -p $@
