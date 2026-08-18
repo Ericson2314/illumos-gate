@@ -113,7 +113,8 @@ HEADHDRS=	elf.h \
 		libelf.h \
 		proc_service.h \
 		rtld_db.h \
-		link.h
+		link.h \
+		nlist.h
 
 HDRS=		$(SYSHDRS:%=include/%) $(MACHSYSHDRS:%=include/%) \
 		$(HEADHDRS:%=include/%)
