@@ -762,7 +762,16 @@ struct rep_protocol_transaction_cmd {
 #define	REP_PROTOCOL_TRANSACTION_CMD_MIN_SIZE \
 	    REP_PROTOCOL_TRANSACTION_CMD_SIZE(0)
 
-#define	TX_SIZE(x)	P2ROUNDUP((x), sizeof (uint32_t))
+/*
+ * The (size_t) cast is load-bearing on an LP64 build.  P2ROUNDUP(x, align)
+ * is (-(-(x) & -(align))): with a uint32_t x, -(x) is evaluated in 32 bits
+ * and then ZERO-extended before being masked against a 64-bit -(align), so
+ * the closing negation lands in the upper word, and TX_SIZE((uint32_t)27)
+ * comes out as 0xffffffff0000001c rather than 0x1c.  Callers that assign the
+ * result back into a uint32_t truncate the damage away; the two in object.c
+ * that add it to a pointer do not.
+ */
+#define	TX_SIZE(x)	P2ROUNDUP((size_t)(x), sizeof (uint32_t))
 
 struct rep_protocol_transaction_request {
 	enum rep_protocol_requestid rpr_request; /* SETUP, ABORT or TEARDOWN */
